@@ -230,7 +230,27 @@
         </div>
       </div>
     </section>
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyCexNUfw-tC7c4jx2HM41x1dL85DijkZiE",
+  authDomain: "lichlamviec-4b977.firebaseapp.com",
+  projectId: "lichlamviec-4b977",
+  storageBucket: "lichlamviec-4b977.firebasestorage.app",
+  messagingSenderId: "1011750021990",
+  appId: "1:1011750021990:web:6aca1e42668defde9f76a7",
+  measurementId: "G-00HK9C9H29"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
     <!-- Lịch tuần -->
     <section id="weekGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4 mb-10"></section>
 
