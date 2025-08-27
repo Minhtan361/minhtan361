@@ -1,0 +1,638 @@
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script>
+    // ====== Cấu hình Firebase ======
+    const firebaseConfig = {
+        apiKey: "AIzaSyCexNUfw-tC7c4jx2HM41x1dL85DijkZiE",
+        authDomain: "lichlamviec-4b977.firebaseapp.com",
+        projectId: "lichlamviec-4b977",
+        storageBucket: "lichlamviec-4b977.firebasestorage.app",
+        messagingSenderId: "1011750021990",
+        appId: "1:1011750021990:web:6aca1e42668defde9f76a7",
+        measurementId: "G-00HK9C9H29"
+    };
+
+    // Khởi tạo Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    // ====== Cấu hình cơ bản ======
+    const ADMIN_PASSWORD = 'thaithae2025@'; 
+    const STORAGE_KEY = 'shiftSignupDataV2';
+    const EMPLOYEES_KEY = 'shiftEmployees';
+    const CAPACITY_KEY = 'shiftCapacity';
+
+    const VN_DAYS = ['Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7','Chủ nhật'];
+
+    // Sức chứa theo quy tắc
+    function capacityFor(dayIndex, shift) {
+        // Lấy cài đặt sức chứa từ localStorage
+        const capacitySettings = loadCapacitySettings();
+        
+        if (shift === 'sang') {
+            return capacitySettings.morning || 2;
+        }
+        
+        // Tối: T2→T5 (0..3), T6→CN (4..6)
+        return dayIndex <= 3 
+            ? (capacitySettings.eveningWeekday || 4) 
+            : (capacitySettings.eveningWeekend || 5);
+    }
+
+    // ====== Helpers ngày/tuần ======
+    function startOfWeek(date) { // Monday as start
+        const d = new Date(date);
+        const day = (d.getDay() + 6) % 7; // 0=Mon..6=Sun
+        d.setDate(d.getDate() - day);
+        d.setHours(0,0,0,0);
+        return d;
+    }
+
+    function addDays(date, days){
+        const d = new Date(date);
+        d.setDate(d.getDate()+days);
+        return d;
+    }
+
+    function fmtISODate(date){
+        return date.toISOString().slice(0,10);
+    }
+
+    // ====== Lưu trữ Firebase ======
+    async function loadAll(){
+        try {
+            // Kiểm tra xem có dữ liệu trên Firestore không
+            const doc = await db.collection('settings').doc('shiftData').get();
+            if (doc.exists) {
+                return doc.data().data || {};
+            }
+            
+            // Nếu không có trên Firestore, thử lấy từ localStorage
+            const localData = localStorage.getItem(STORAGE_KEY);
+            if (localData) {
+                // Đồng bộ dữ liệu từ localStorage lên Firestore
+                const data = JSON.parse(localData);
+                await db.collection('settings').doc('shiftData').set({ data });
+                return data;
+            }
+            
+            return {};
+        } catch(e) {
+            console.error("Lỗi khi tải dữ liệu từ Firebase:", e);
+            // Fallback về localStorage nếu Firebase không hoạt động
+            try { 
+                return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); 
+            } catch(err) { 
+                return {}; 
+            }
+        }
+    }
+
+    async function saveAll(data){
+        try {
+            // Lưu lên Firestore
+            await db.collection('settings').doc('shiftData').set({ data });
+            
+            // Đồng thời lưu vào localStorage để dự phòng
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        } catch(e) {
+            console.error("Lỗi khi lưu dữ liệu lên Firebase:", e);
+            // Fallback về localStorage nếu Firebase không hoạt động
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+    }
+
+    async function loadEmployees(){
+        try {
+            const doc = await db.collection('settings').doc('employees').get();
+            if (doc.exists) {
+                return doc.data().employees || [];
+            }
+            
+            const localEmployees = localStorage.getItem(EMPLOYEES_KEY);
+            if (localEmployees) {
+                const employees = JSON.parse(localEmployees);
+                await db.collection('settings').doc('employees').set({ employees });
+                return employees;
+            }
+            
+            return [];
+        } catch(e) {
+            console.error("Lỗi khi tải nhân viên từ Firebase:", e);
+            try { 
+                return JSON.parse(localStorage.getItem(EMPLOYEES_KEY) || '[]'); 
+            } catch(err) { 
+                return []; 
+            }
+        }
+    }
+
+    async function saveEmployees(employees){
+        try {
+            await db.collection('settings').doc('employees').set({ employees });
+            localStorage.setItem(EMPLOYEES_KEY, JSON.stringify(employees));
+        } catch(e) {
+            console.error("Lỗi khi lưu nhân viên lên Firebase:", e);
+            localStorage.setItem(EMPLOYEES_KEY, JSON.stringify(employees));
+        }
+    }
+
+    async function loadCapacitySettings(){
+        try {
+            const doc = await db.collection('settings').doc('capacity').get();
+            if (doc.exists) {
+                return doc.data().capacity || {};
+            }
+            
+            const localCapacity = localStorage.getItem(CAPACITY_KEY);
+            if (localCapacity) {
+                const capacity = JSON.parse(localCapacity);
+                await db.collection('settings').doc('capacity').set({ capacity });
+                return capacity;
+            }
+            
+            return {};
+        } catch(e) {
+            console.error("Lỗi khi tải cài đặt sức chứa từ Firebase:", e);
+            try { 
+                return JSON.parse(localStorage.getItem(CAPACITY_KEY) || '{}'); 
+            } catch(err) { 
+                return {}; 
+            }
+        }
+    }
+
+    async function saveCapacitySettings(settings){
+        try {
+            await db.collection('settings').doc('capacity').set({ capacity: settings });
+            localStorage.setItem(CAPACITY_KEY, JSON.stringify(settings));
+        } catch(e) {
+            console.error("Lỗi khi lưu cài đặt sức chứa lên Firebase:", e);
+            localStorage.setItem(CAPACITY_KEY, JSON.stringify(settings));
+        }
+    }
+
+    function weekKeyOf(date){
+        return 'week_' + fmtISODate(startOfWeek(date));
+    }
+
+    // Lấy danh sách theo tuần (object)
+    async function getWeekData(date){
+        const all = await loadAll();
+        const key = weekKeyOf(date);
+        return all[key] || [];
+    }
+
+    async function setWeekData(date, list){
+        const all = await loadAll();
+        const key = weekKeyOf(date);
+        all[key] = list;
+        await saveAll(all);
+    }
+
+    // ====== Trạng thái giao diện ======
+    let currentWeekStart = startOfWeek(new Date());
+    let isAdmin = false;
+
+    const weekStartInput = document.getElementById('weekStart');
+    const prevWeekBtn = document.getElementById('prevWeek');
+    const nextWeekBtn = document.getElementById('nextWeek');
+    const dayChoices = document.getElementById('dayChoices');
+    const weekGrid = document.getElementById('weekGrid');
+    const signupForm = document.getElementById('signupForm');
+    const empNameSelect = document.getElementById('empName');
+    const shiftSelect = document.getElementById('shift');
+    const noteInput = document.getElementById('note');
+    const adminPasswordInput = document.getElementById('adminPassword');
+    const adminToggleBtn = document.getElementById('adminToggle');
+    const exportBtn = document.getElementById('exportBtn');
+    const clearWeekBtn = document.getElementById('clearWeekBtn');
+    const toast = document.getElementById('toast');
+    const adminControls = document.getElementById('adminControls');
+    const newEmployeeInput = document.getElementById('newEmployee');
+    const addEmployeeBtn = document.getElementById('addEmployeeBtn');
+    const employeeList = document.getElementById('employeeList');
+    const capacityMorningInput = document.getElementById('capacityMorning');
+    const capacityEveningWeekdayInput = document.getElementById('capacityEveningWeekday');
+    const capacityEveningWeekendInput = document.getElementById('capacityEveningWeekend');
+    const saveCapacityBtn = document.getElementById('saveCapacityBtn');
+    const morningCapacityText = document.getElementById('morning-capacity-text');
+    const eveningWeekdayCapacityText = document.getElementById('evening-weekday-capacity-text');
+    const eveningWeekendCapacityText = document.getElementById('evening-weekend-capacity-text');
+
+    function showToast(msg, type='ok'){
+        toast.textContent = msg;
+        toast.className = '';
+        toast.classList.add('p-4', 'rounded-xl', 'border-l-4', 'shadow-md', 'mb-6');
+        
+        if (type === 'ok') {
+            toast.classList.add('bg-emerald-50', 'text-emerald-700', 'border-emerald-400');
+            toast.innerHTML = `<div class="flex items-center"><i class="fas fa-check-circle mr-2"></i> ${msg}</div>`;
+        } else {
+            toast.classList.add('bg-rose-50', 'text-rose-700', 'border-rose-400');
+            toast.innerHTML = `<div class="flex items-center"><i class="fas fa-exclamation-circle mr-2"></i> ${msg}</div>`;
+        }
+        
+        toast.classList.remove('hidden');
+        setTimeout(()=>toast.classList.add('hidden'), 3000);
+    }
+
+    function renderDayChoices(){
+        dayChoices.innerHTML = '';
+        for (let i=0;i<7;i++){
+            const d = addDays(currentWeekStart,i);
+            const btn = document.createElement('button');
+            btn.type='button';
+            btn.dataset.dayIndex=i;
+            btn.className='day-cell px-3 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-indigo-50 text-sm transition-colors';
+            btn.innerHTML = `<div class="font-medium">${VN_DAYS[i].substring(0, 3)}</div><div class="text-xs text-slate-500">${d.getDate()}/${d.getMonth()+1}</div>`;
+            btn.addEventListener('click',()=>{
+                // toggle selection visual
+                [...dayChoices.children].forEach(c=>c.classList.remove('selected'));
+                btn.classList.add('selected');
+                dayChoices.dataset.selected = i;
+            });
+            dayChoices.appendChild(btn);
+        }
+        // default select Monday
+        dayChoices.children[0]?.click();
+    }
+
+    function entryKey(dayIndex, shift){
+        return `${fmtISODate(currentWeekStart)}_${dayIndex}_${shift}`;
+    }
+
+    async function getEntries(){
+        return await getWeekData(currentWeekStart);
+    }
+
+    async function setEntries(list){
+        await setWeekData(currentWeekStart, list);
+    }
+
+    async function listFor(dayIndex, shift){
+        const entries = await getEntries();
+        return entries.filter(e=>e.dayIndex===dayIndex && e.shift===shift);
+    }
+
+    async function alreadyRegistered(name, dayIndex, shift){
+        name = name.trim().toLowerCase();
+        const entries = await getEntries();
+        return entries.some(e=> e.dayIndex===dayIndex && e.shift===shift && e.name.trim().toLowerCase()===name);
+    }
+
+    async function renderWeekGrid(){
+        weekGrid.innerHTML = '';
+        for (let i=0;i<7;i++){
+            const dayDate = addDays(currentWeekStart,i);
+            const isToday = fmtISODate(dayDate) === fmtISODate(new Date());
+            
+            const col = document.createElement('div');
+            col.className=`bg-white rounded-2xl shadow-lg border ${isToday ? 'border-indigo-300 ring-1 ring-indigo-200' : 'border-slate-100'} flex flex-col card-hover animate-fade-in`;
+
+            const header = document.createElement('div');
+            header.className=`px-4 py-3 border-b border-slate-100 flex items-center justify-between ${isToday ? 'bg-indigo-50' : ''}`;
+            header.innerHTML = `
+            <div>
+                <div class="text-sm text-slate-500">${VN_DAYS[i]}</div>
+                <div class="font-semibold ${isToday ? 'text-indigo-600' : ''}">${dayDate.getDate()}/${dayDate.getMonth()+1}</div>
+            </div>
+            ${isToday ? '<span class="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs rounded-full">Hôm nay</span>' : ''}
+            `;
+            col.appendChild(header);
+
+            for (const shift of ['sang','toi']) {
+                const cap = capacityFor(i, shift);
+                const items = await listFor(i, shift);
+                const remain = cap - items.length;
+                const isFull = remain <= 0;
+
+                const wrap = document.createElement('div');
+                wrap.className=`p-4 border-b border-slate-100 last:border-b-0 shift-indicator ${shift === 'sang' ? 'shift-morning' : 'shift-evening'}`;
+
+                const title = document.createElement('div');
+                title.className='flex items-center justify-between mb-3';
+                title.innerHTML = `
+                <div class="font-medium flex items-center">
+                    ${shift==='sang' ? '<i class="fas fa-sun text-amber-500 mr-2"></i>' : '<i class="fas fa-moon text-indigo-500 mr-2"></i>'}
+                    ${shift==='sang'?'Buổi sáng':'Buổi tối'} 
+                    <span class="text-xs text-slate-500 ml-1">(Tối đa ${cap})</span>
+                </div>
+                <div class="text-xs font-medium ${isFull ? 'text-rose-600 bg-rose-50 px-2 py-1 rounded-full' : 'text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full'}">
+                    ${isFull ? 'Đã đủ' : `Còn ${remain}`}
+                </div>
+                `;
+                wrap.appendChild(title);
+
+                const list = document.createElement('div');
+                list.className='flex flex-col gap-2';
+
+                if (items.length===0){
+                    const empty = document.createElement('div');
+                    empty.className='text-sm text-slate-400 italic text-center py-2';
+                    empty.innerHTML = '<i class="far fa-frown mr-1"></i> Chưa có ai đăng ký';
+                    list.appendChild(empty);
+                } else {
+                    items.forEach((e, idx)=>{
+                        const row = document.createElement('div');
+                        row.className='group flex items-center justify-between px-3 py-2 bg-slate-50 rounded-xl transition-colors hover:bg-slate-100';
+                        
+                        const info = document.createElement('div');
+                        info.className='flex-1';
+                        
+                        const name = document.createElement('div');
+                        name.className='text-sm font-medium truncate';
+                        name.textContent = e.name;
+                        
+                        if (e.note) {
+                            const note = document.createElement('div');
+                            note.className='text-xs text-slate-500 truncate';
+                            note.textContent = e.note;
+                            info.appendChild(name);
+                            info.appendChild(note);
+                        } else {
+                            info.appendChild(name);
+                        }
+                        
+                        const right = document.createElement('div');
+                        right.className='flex items-center gap-2 text-xs text-slate-500';
+                        const time = new Date(e.createdAt);
+                        right.innerHTML = `<span>${time.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>`;
+
+                        if (isAdmin){
+                            const delBtn = document.createElement('button');
+                            delBtn.title='Xóa đăng ký';
+                            delBtn.className='opacity-0 group-hover:opacity-100 px-2 py-1 rounded-lg bg-rose-500 text-white text-xs hover:bg-rose-600 transition-opacity';
+                            delBtn.innerHTML = '<i class="fas fa-times"></i>';
+                            delBtn.addEventListener('click', async ()=>{
+                                const cur = await getEntries();
+                                const keep = cur.filter(x=> !(x.dayIndex===i && x.shift===shift && x.name===e.name && x.createdAt===e.createdAt));
+                                await setEntries(keep);
+                                renderWeekGrid();
+                                showToast('Đã xóa đăng ký.', 'ok');
+                            });
+                            right.appendChild(delBtn);
+                        }
+
+                        row.appendChild(info);
+                        row.appendChild(right);
+                        list.appendChild(row);
+                    });
+                }
+
+                wrap.appendChild(list);
+                col.appendChild(wrap);
+            }
+
+            weekGrid.appendChild(col);
+        }
+    }
+
+    async function renderEmployeeDropdown() {
+        const employees = await loadEmployees();
+        empNameSelect.innerHTML = '<option value="">-- Chọn nhân viên --</option>';
+        
+        employees.forEach(employee => {
+            const option = document.createElement('option');
+            option.value = employee;
+            option.textContent = employee;
+            empNameSelect.appendChild(option);
+        });
+    }
+
+    async function renderEmployeeList() {
+        const employees = await loadEmployees();
+        employeeList.innerHTML = '';
+        
+        employees.forEach(employee => {
+            const li = document.createElement('li');
+            li.className = 'flex items-center justify-between p-2 bg-slate-50 rounded-lg';
+            
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = employee;
+            
+            const delBtn = document.createElement('button');
+            delBtn.className = 'px-2 py-1 text-xs bg-rose-500 text-white rounded hover:bg-rose-600';
+            delBtn.innerHTML = '<i class="fas fa-trash"></i>';
+            delBtn.addEventListener('click', async () => {
+                const updatedEmployees = employees.filter(e => e !== employee);
+                await saveEmployees(updatedEmployees);
+                renderEmployeeList();
+                renderEmployeeDropdown();
+                showToast('Đã xóa nhân viên.', 'ok');
+            });
+            
+            li.appendChild(nameSpan);
+            li.appendChild(delBtn);
+            employeeList.appendChild(li);
+        });
+    }
+
+    async function loadCapacityInputs() {
+        const capacitySettings = await loadCapacitySettings();
+        
+        capacityMorningInput.value = capacitySettings.morning || 2;
+        capacityEveningWeekdayInput.value = capacitySettings.eveningWeekday || 4;
+        capacityEveningWeekendInput.value = capacitySettings.eveningWeekend || 5;
+        
+        // Cập nhật text hiển thị
+        morningCapacityText.textContent = capacitySettings.morning || 2;
+        eveningWeekdayCapacityText.textContent = capacitySettings.eveningWeekday || 4;
+        eveningWeekendCapacityText.textContent = capacitySettings.eveningWeekend || 5;
+    }
+
+    // ====== Sự kiện ======
+    function updateWeekInput(){
+        weekStartInput.value = fmtISODate(currentWeekStart);
+    }
+
+    weekStartInput.addEventListener('change', (e)=>{
+        const d = new Date(e.target.value);
+        currentWeekStart = startOfWeek(d);
+        updateWeekInput();
+        renderDayChoices();
+        renderWeekGrid();
+    });
+
+    prevWeekBtn.addEventListener('click', ()=>{
+        currentWeekStart = addDays(currentWeekStart, -7);
+        updateWeekInput();
+        renderDayChoices();
+        renderWeekGrid();
+    });
+
+    nextWeekBtn.addEventListener('click', ()=>{
+        currentWeekStart = addDays(currentWeekStart, 7);
+        updateWeekInput();
+        renderDayChoices();
+        renderWeekGrid();
+    });
+
+    signupForm.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const name = (empNameSelect.value||'').trim();
+        if (!name){ showToast('Vui lòng chọn nhân viên.', 'err'); return; }
+        const shift = shiftSelect.value; // 'sang' | 'toi'
+        const dayIndex = parseInt(dayChoices.dataset.selected || '0');
+        const note = (noteInput.value||'').trim();
+
+        // Kiểm tra trùng
+        if (await alreadyRegistered(name, dayIndex, shift)){
+            showToast('Nhân viên đã đăng ký ca này rồi.', 'err');
+            return;
+        }
+
+        // Kiểm tra còn slot
+        const cap = capacityFor(dayIndex, shift);
+        const current = await listFor(dayIndex, shift);
+        if (current.length >= cap){
+            showToast('Ca đã đủ số lượng.', 'err');
+            return;
+        }
+
+        const entry = { name, shift, dayIndex, note, createdAt: new Date().toISOString() };
+        const all = await getEntries();
+        all.push(entry);
+        await setEntries(all);
+        renderWeekGrid();
+        showToast('Đăng ký thành công!', 'ok');
+        noteInput.value = ''; // Reset ghi chú
+    });
+
+    adminToggleBtn.addEventListener('click', ()=>{
+        if (!isAdmin){
+            if (adminPasswordInput.value === ADMIN_PASSWORD){
+                isAdmin = true;
+                adminToggleBtn.textContent = 'Đăng xuất';
+                adminToggleBtn.classList.add('bg-indigo-600');
+                exportBtn.disabled = false;
+                clearWeekBtn.disabled = false;
+                adminControls.classList.remove('hidden');
+                showToast('Đăng nhập admin thành công.', 'ok');
+                renderWeekGrid();
+                renderEmployeeList();
+                loadCapacityInputs();
+            } else {
+                showToast('Sai mật khẩu admin.', 'err');
+            }
+        } else {
+            isAdmin = false;
+            adminToggleBtn.textContent = 'Đăng nhập';
+            adminToggleBtn.classList.remove('bg-indigo-600');
+            exportBtn.disabled = true;
+            clearWeekBtn.disabled = true;
+            adminControls.classList.add('hidden');
+            showToast('Đã đăng xuất admin.', 'ok');
+            renderWeekGrid();
+        }
+    });
+
+    addEmployeeBtn.addEventListener('click', async () => {
+        const name = newEmployeeInput.value.trim();
+        if (!name) {
+            showToast('Vui lòng nhập tên nhân viên.', 'err');
+            return;
+        }
+        
+        const employees = await loadEmployees();
+        if (employees.includes(name)) {
+            showToast('Nhân viên đã tồn tại.', 'err');
+            return;
+        }
+        
+        employees.push(name);
+        await saveEmployees(employees);
+        renderEmployeeList();
+        renderEmployeeDropdown();
+        newEmployeeInput.value = '';
+        showToast('Đã thêm nhân viên mới.', 'ok');
+    });
+
+    saveCapacityBtn.addEventListener('click', async () => {
+        const morning = parseInt(capacityMorningInput.value) || 2;
+        const eveningWeekday = parseInt(capacityEveningWeekdayInput.value) || 4;
+        const eveningWeekend = parseInt(capacityEveningWeekendInput.value) || 5;
+        
+        if (morning < 1 || eveningWeekday < 1 || eveningWeekend < 1) {
+            showToast('Sức chứa phải lớn hơn 0.', 'err');
+            return;
+        }
+        
+        await saveCapacitySettings({ morning, eveningWeekday, eveningWeekend });
+        loadCapacityInputs();
+        renderWeekGrid();
+        showToast('Đã lưu cài đặt sức chứa.', 'ok');
+    });
+
+    exportBtn.addEventListener('click', async ()=>{
+        if (!isAdmin) return;
+        
+        // Tạo nội dung CSV với font Times New Roman được chỉ định
+        let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+        
+        // Thêm dòng tiêu đề với thông tin tuần
+        csvContent += "LỊCH LÀM VIỆC - TUẦN BẮT ĐẦU " + fmtISODate(currentWeekStart) + "\r\n\r\n";
+        
+        // Tiêu đề các cột
+        csvContent += "Ngày,Buổi,Họ tên,Ghi chú,Giờ đăng ký\r\n";
+        
+        // Dữ liệu
+        const data = (await getEntries()).slice().sort((a,b)=> a.dayIndex-b.dayIndex || a.shift.localeCompare(b.shift) || a.createdAt.localeCompare(b.createdAt));
+        
+        data.forEach(entry=>{
+            const dayDate = addDays(currentWeekStart, entry.dayIndex);
+            const dateStr = `${dayDate.getDate()}/${dayDate.getMonth()+1}/${dayDate.getFullYear()}`;
+            const shiftName = entry.shift === 'sang' ? 'Sáng' : 'Tối';
+            const time = new Date(entry.createdAt);
+            const timeStr = time.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) + ' ' + time.toLocaleDateString();
+            
+            // Escape các ký tự đặc biệt trong CSV
+            const escapeCSV = (str) => {
+                if (!str) return '';
+                if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                    return '"' + str.replace(/"/g, '""') + '"';
+                }
+                return str;
+            };
+            
+            csvContent += `${escapeCSV(dateStr)},${escapeCSV(shiftName)},${escapeCSV(entry.name)},${escapeCSV(entry.note)},${escapeCSV(timeStr)}\r\n`;
+        });
+        
+        // Tạo file và download
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `LichLamViec_${fmtISODate(currentWeekStart)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showToast('Đã xuất file Excel (CSV).', 'ok');
+    });
+
+    clearWeekBtn.addEventListener('click', async ()=>{
+        if (!isAdmin) return;
+        if (!confirm('Xóa tất cả đăng ký trong tuần này? Không thể hoàn tác.')) return;
+        await setEntries([]);
+        renderWeekGrid();
+        showToast('Đã xóa toàn bộ đăng ký tuần.', 'ok');
+    });
+
+    // ====== Khởi tạo ======
+    async function init(){
+        // Đặt tuần hiện tại
+        currentWeekStart = startOfWeek(new Date());
+        updateWeekInput();
+        renderDayChoices();
+        await renderWeekGrid();
+        await renderEmployeeDropdown();
+        await loadCapacityInputs();
+        
+        // Hiển thị thông báo kết nối Firebase
+        showToast('Đã kết nối với Firebase. Dữ liệu được đồng bộ đám mây.', 'ok');
+    }
+
+    init();
+</script>
