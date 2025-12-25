@@ -1,854 +1,309 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <link rel="icon" href="https://minhtan361.github.io/minhtan361/logo/favicon.ico" type="image/x-icon">
-
-<link rel="icon" type="image/png" sizes="16x16" href="https://minhtan361.github.io/minhtan361/logo/favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="https://minhtan361.github.io/minhtan361/logo/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="57x57" href="https://minhtan361.github.io/minhtan361/logo/favicon-57x57.png">
-<link rel="icon" type="image/png" sizes="60x60" href="https://minhtan361.github.io/minhtan361/logo/favicon-60x60.png">
-<link rel="icon" type="image/png" sizes="72x72" href="https://minhtan361.github.io/minhtan361/logo/favicon-72x72.png">
-<link rel="icon" type="image/png" sizes="76x76" href="https://minhtan361.github.io/minhtan361/logo/favicon-76x76.png">
-<link rel="icon" type="image/png" sizes="96x96" href="https://minhtan361.github.io/minhtan361/logo/favicon-96x96.png">
-<link rel="icon" type="image/png" sizes="114x114" href="https://minhtan361.github.io/minhtan361/logo/favicon-114x114.png">
-<link rel="icon" type="image/png" sizes="120x120" href="https://minhtan361.github.io/minhtan361/logo/favicon-120x120.png">
-<link rel="icon" type="image/png" sizes="144x144" href="https://minhtan361.github.io/minhtan361/logo/favicon-144x144.png">
-<link rel="icon" type="image/png" sizes="152x152" href="https://minhtan361.github.io/minhtan361/logo/favicon-152x152.png">
-<link rel="icon" type="image/png" sizes="180x180" href="https://minhtan361.github.io/minhtan361/logo/favicon-180x180.png">
-<link rel="icon" type="image/png" sizes="192x192" href="https://minhtan361.github.io/minhtan361/logo/favicon-192x192.png">
-<link rel="icon" type="image/png" sizes="256x256" href="https://minhtan361.github.io/minhtan361/logo/favicon-256x256.png">
-<link rel="icon" type="image/png" sizes="384x384" href="https://minhtan361.github.io/minhtan361/logo/favicon-384x384.png">
-<link rel="icon" type="image/png" sizes="512x512" href="https://minhtan361.github.io/minhtan361/logo/favicon-512x512.png">
-
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Lịch Làm by minhtan </title>
-  <!-- TailwindCSS CDN (chỉ để tạo giao diện hiện đại) -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    /* Scrollbar gọn gàng */
-    ::-webkit-scrollbar{height:8px;width:8px}::-webkit-scrollbar-thumb{background:#9ca3af;border-radius:8px}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Schedule Pro - Premium</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.7/dayjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.7/locale/vi.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.7/plugin/isoWeek.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
     
-    /* Hiệu ứng và animation */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .animate-fade-in {
-      animation: fadeIn 0.5s ease-out forwards;
-    }
-    
-    .card-hover {
-      transition: all 0.3s ease;
-    }
-    
-    .card-hover:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-    }
-    
-    .shift-indicator {
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .shift-indicator::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 4px;
-      height: 100%;
-    }
-    
-    .shift-morning::after {
-      background: linear-gradient(to bottom, #fde047, #facc15);
-    }
-    
-    .shift-evening::after {
-      background: linear-gradient(to bottom, #818cf8, #4f46e5);
-    }
-    
-    .gradient-bg {
-      background: linear-gradient(135deg, #4c51bf 0%, #7c3aed 100%); /* Indigo & Violet */
-    }
-    
-    .day-cell {
-      transition: all 0.2s ease;
-      /* Tăng kích thước chạm trên mobile */
-      min-height: 55px; 
-    }
-    
-    .day-cell:hover {
-      background-color: #f0f4ff;
-    }
-    
-    .day-cell.selected {
-      background-color: #e0e7ff;
-      border-color: #4f46e5;
-      box-shadow: 0 0 0 2px #e0e7ff;
-      transform: scale(1.05);
-    }
-    
-    .pulse-alert {
-      animation: pulse 2s infinite;
-    }
-    
-    @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-      70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-    }
-
-    /* CSS cho nền 3D */
-    #vanta-bg {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: -1; /* Đặt canvas nằm dưới cùng */
-    }
-  </style>
-</head>
-<body class="min-h-screen bg-transparent text-slate-800">
-  <div id="vanta-bg"></div>
-  <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-    <header class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4 mb-8">
-      <div class="bg-white/70 backdrop-blur-lg rounded-3xl p-5 shadow-2xl border border-slate-100 flex-1">
-        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight bg-clip-text text-transparent gradient-bg">
-          <i class="fas fa-calendar-alt mr-2"></i>Đăng Ký Ca Làm **by minhtan**
-        </h1>
-        <div class="flex flex-wrap gap-4 mt-3">
-          <div class="flex items-center text-sm p-1 bg-amber-50 rounded-lg">
-            <div class="w-3 h-3 rounded-full bg-amber-400 mr-2"></div>
-            <span class="text-slate-600">Buổi sáng: <b id="morning-capacity-text">2</b> người (T2→CN)</span>
-          </div>
-          <div class="flex items-center text-sm p-1 bg-indigo-50 rounded-lg">
-            <div class="w-3 h-3 rounded-full bg-indigo-500 mr-2"></div>
-            <span class="text-slate-600">Buổi tối: <b id="evening-weekday-capacity-text">4</b> (T2→T5), <b id="evening-weekend-capacity-text">5</b> (T6→CN)</span>
-          </div>
-        </div>
-      </div>
-      
-      <div class="bg-white/70 backdrop-blur-lg rounded-3xl p-4 shadow-2xl border border-slate-100 w-full xl:w-auto">
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
-          <label class="text-sm text-slate-600 whitespace-nowrap" for="weekStart">
-            <i class="far fa-calendar-check mr-1 text-indigo-500"></i>Tuần:
-          </label>
-          <input id="weekStart" type="date" class="px-4 py-2 rounded-xl border-2 border-slate-300 bg-white shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" />
-          <div class="flex gap-2 mt-3 sm:mt-0">
-            <button id="prevWeek" class="px-4 py-2 rounded-xl border border-slate-300 bg-slate-50 shadow-sm hover:bg-slate-100 transition-colors text-indigo-600">
-              <i class="fas fa-chevron-left"></i>
-            </button>
-            <button id="nextWeek" class="px-4 py-2 rounded-xl border border-slate-300 bg-slate-50 shadow-sm hover:bg-slate-100 transition-colors text-indigo-600">
-              <i class="fas fa-chevron-right"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <div id="toast" class="hidden mb-6 p-4 rounded-xl border-l-4 shadow-xl animate-fade-in"></div>
-
-    <section class="grid md:grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-      <form id="signupForm" class="bg-white/70 backdrop-blur-lg rounded-3xl shadow-2xl p-6 lg:p-8 border border-slate-100 card-hover">
-        <h2 class="font-bold text-xl mb-4 flex items-center text-indigo-700">
-          <i class="fas fa-pen-to-square mr-2"></i>Đăng ký ca làm của bạn
-        </h2>
-        <div class="grid sm:grid-cols-2 gap-4">
-          <div class="sm:col-span-2">
-            <label class="text-sm text-slate-600 font-medium">Họ và tên</label>
-            <div class="relative mt-1">
-              <i class="fas fa-user absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
-              <select id="empName" class="pl-10 pr-4 py-3 w-full rounded-xl border-2 border-slate-300 bg-white shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
-                <option value="">-- Chọn nhân viên --</option>
-              </select>
-            </div>
-          </div>
-          <div>
-            <label class="text-sm text-slate-600 font-medium">Buổi</label>
-            <div class="relative mt-1">
-              <i class="fas fa-clock absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
-              <select id="shift" class="pl-10 pr-4 py-3 w-full rounded-xl border-2 border-slate-300 bg-white shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <option value="sang">Sáng</option>
-                <option value="toi">Tối</option>
-              </select>
-            </div>
-          </div>
-          <div class="sm:col-span-2">
-            <label class="text-sm text-slate-600 font-medium block mb-2">Chọn ngày (trong tuần đang xem)</label>
-            <div id="dayChoices" class="mt-2 grid grid-cols-4 md:grid-cols-7 gap-2"></div>
-          </div>
-          <div class="sm:col-span-2">
-            <label class="text-sm text-slate-600 font-medium">Ghi chú (tùy chọn)</label>
-            <div class="relative mt-1">
-              <i class="fas fa-sticky-note absolute left-3 top-3 text-slate-400"></i>
-              <textarea id="note" placeholder="Ghi chú cho ca làm này..." class="pl-10 pr-4 py-3 w-full rounded-xl border-2 border-slate-300 bg-white shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500" rows="2"></textarea>
-            </div>
-          </div>
-        </div>
-        <div class="flex flex-col sm:flex-row items-center justify-between mt-6 pt-4 border-t border-slate-100">
-          <p class="text-xs text-slate-500 mb-3 sm:mb-0"><i class="fas fa-info-circle mr-1"></i>Không thể đăng ký trùng ca cùng ngày.</p>
-          <button class="w-full sm:w-auto px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 shadow-lg transition-all flex items-center justify-center" type="submit">
-            <i class="fas fa-check-circle mr-2"></i>Hoàn tất Đăng ký
-          </button>
-        </div>
-      </form>
-
-      <div class="bg-white/70 backdrop-blur-lg rounded-3xl shadow-2xl p-6 lg:p-8 border border-slate-100 card-hover">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <h2 class="font-bold text-xl flex items-center text-slate-700">
-            <i class="fas fa-lock mr-2"></i>Khu vực Quản trị
-          </h2>
-          <div class="flex items-center gap-2 w-full sm:w-auto">
-            <div class="relative flex-1">
-              <i class="fas fa-key absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
-              <input id="adminPassword" type="password" placeholder="Mật khẩu admin" class="pl-10 pr-4 py-2.5 w-full rounded-xl border-2 border-slate-300 bg-white shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            </div>
-            <button id="adminToggle" class="px-4 py-2.5 rounded-xl bg-slate-800 text-white hover:bg-slate-700 transition-colors flex-shrink-0">Đăng nhập</button>
-          </div>
-        </div>
-        <p id="adminNote" class="mt-4 text-sm text-slate-600 bg-indigo-50 p-3 rounded-xl border border-indigo-200">
-          <i class="fas fa-shield-alt mr-1 text-indigo-500"></i>Chỉ admin mới có quyền quản lý nhân viên, xóa/chỉnh đăng ký và xuất dữ liệu.
-        </p>
-        <div class="mt-4 flex flex-wrap gap-3 pt-4 border-t border-slate-100">
-          <button id="exportBtn" class="flex-1 min-w-0 px-4 py-2.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 shadow-md disabled:opacity-40 transition-colors flex items-center justify-center font-medium" disabled>
-            <i class="fas fa-file-export mr-2"></i>Xuất Excel (CSV)
-          </button>
-          <button id="clearWeekBtn" class="flex-1 min-w-0 px-4 py-2.5 rounded-xl bg-rose-600 text-white hover:bg-rose-700 shadow-md disabled:opacity-40 transition-colors flex items-center justify-center font-medium pulse-alert" disabled>
-            <i class="fas fa-trash mr-2"></i>Xóa tuần này
-          </button>
-        </div>
-        <div id="adminControls" class="hidden mt-4 pt-4 border-t border-slate-100 animate-fade-in">
-          <h3 class="font-semibold mb-3 flex items-center text-indigo-600">
-            <i class="fas fa-users-cog mr-2"></i>Quản lý nhân viên
-          </h3>
-          <div class="flex gap-2 mb-3">
-            <input id="newEmployee" type="text" placeholder="Tên nhân viên mới" class="flex-1 px-4 py-2 rounded-xl border-2 border-slate-300 bg-white shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <button id="addEmployeeBtn" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition-colors flex-shrink-0">
-              <i class="fas fa-plus mr-1"></i>Thêm
-            </button>
-          </div>
-          <div class="max-h-40 overflow-y-auto mb-4 border border-slate-200 rounded-lg p-2 bg-white">
-            <ul id="employeeList" class="space-y-1"></ul>
-          </div>
-          
-          <h3 class="font-semibold mb-3 flex items-center mt-6 text-indigo-600">
-            <i class="fas fa-sliders-h mr-2"></i>Tùy chỉnh sức chứa
-          </h3>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div>
-              <label class="text-sm text-slate-600">Sáng (T2-CN)</label>
-              <input id="capacityMorning" type="number" min="1" class="w-full px-3 py-2 rounded-xl border-2 border-slate-300 bg-white shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            </div>
-            <div>
-              <label class="text-sm text-slate-600">Tối (T2-T5)</label>
-              <input id="capacityEveningWeekday" type="number" min="1" class="w-full px-3 py-2 rounded-xl border-2 border-slate-300 bg-white shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            </div>
-            <div>
-              <label class="text-sm text-slate-600">Tối (T6-CN)</label>
-              <input id="capacityEveningWeekend" type="number" min="1" class="w-full px-3 py-2 rounded-xl border-2 border-slate-300 bg-white shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            </div>
-          </div>
-          <button id="saveCapacityBtn" class="mt-4 w-full px-4 py-2.5 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition-colors font-medium">
-            <i class="fas fa-save mr-1"></i>Lưu cài đặt
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <section id="weekGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-10"></section>
-
-    <footer class="mt-12 text-center text-xs text-slate-500 border-t border-slate-200 pt-6">
-      <div class="flex items-center justify-center gap-1 mb-1">
-        <i class="fas fa-calendar-check text-indigo-500"></i>
-        <span>© 2025 — minhtan361 (UI Nâng Cấp)</span>
-      </div>
-      <p>0377262912 - pls dont copy &hearts;</p>
-    </footer>
-  </div>
-
-  <!-- Firebase App + Firestore + Analytics (ESM) -->
-  <script type="module">
-    // ===== Firebase SDKs từ CDN =====
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-analytics.js";
-    import {
-      getFirestore, doc, getDoc, setDoc, collection, onSnapshot,
-      runTransaction
-    } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
-
-    // ===== Cấu hình Firebase của bạn =====
-    const firebaseConfig = {
-      apiKey: "AIzaSyCexNUfw-tC7c4jx2HM41x1dL85DijkZiE",
-      authDomain: "lichlamviec-4b977.firebaseapp.com",
-      projectId: "lichlamviec-4b977",
-      storageBucket: "lichlamviec-4b977.firebasestorage.app",
-      messagingSenderId: "1011750021990",
-      appId: "1:1011750021990:web:6aca1e42668defde9f76a7",
-      measurementId: "G-00HK9C9H29"
-    };
-
-    // Khởi tạo Firebase
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-    const db = getFirestore(app);
-
-    // ====== Cấu hình cơ bản ======
-    const ADMIN_PASSWORD = 'thaithae2025@'; 
-
-    const VN_DAYS = ['Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7','Chủ nhật'];
-
-    // ====== Helpers ngày/tuần ======
-    function startOfWeek(date) { // Monday as start
-      const d = new Date(date);
-      const day = (d.getDay() + 6) % 7; // 0=Mon..6=Sun
-      d.setDate(d.getDate() - day);
-      d.setHours(0,0,0,0);
-      return d;
-    }
-    function addDays(date, days){
-      const d = new Date(date);
-      d.setDate(d.getDate()+days);
-      return d;
-    }
-    function fmtISODate(date){
-      return date.toISOString().slice(0,10);
-    }
-    function weekKeyOf(date){
-      return 'week_' + fmtISODate(startOfWeek(date));
-    }
-    function getTodayStart() {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      return today;
-    }
-
-    // ====== State (đồng bộ realtime) ======
-    let currentWeekStart = startOfWeek(new Date());
-    let isAdmin = false;
-
-    let unsubscribeWeek = null;
-    let unsubscribeEmployees = null;
-    let unsubscribeCapacity = null;
-
-    // Cache tại client
-    let weekEntries = []; // mảng entries của tuần hiện tại
-    let employees = [];
-    let capacitySettings = { morning: 2, eveningWeekday: 4, eveningWeekend: 5 };
-
-    // ====== DOM ======
-    const weekStartInput = document.getElementById('weekStart');
-    const prevWeekBtn = document.getElementById('prevWeek');
-    const nextWeekBtn = document.getElementById('nextWeek');
-    const dayChoices = document.getElementById('dayChoices');
-    const weekGrid = document.getElementById('weekGrid');
-    const signupForm = document.getElementById('signupForm');
-    const empNameSelect = document.getElementById('empName');
-    const shiftSelect = document.getElementById('shift');
-    const noteInput = document.getElementById('note');
-    const adminPasswordInput = document.getElementById('adminPassword');
-    const adminToggleBtn = document.getElementById('adminToggle');
-    const exportBtn = document.getElementById('exportBtn');
-    const clearWeekBtn = document.getElementById('clearWeekBtn');
-    const toast = document.getElementById('toast');
-    const adminControls = document.getElementById('adminControls');
-    const newEmployeeInput = document.getElementById('newEmployee');
-    const addEmployeeBtn = document.getElementById('addEmployeeBtn');
-    const employeeList = document.getElementById('employeeList');
-    const capacityMorningInput = document.getElementById('capacityMorning');
-    const capacityEveningWeekdayInput = document.getElementById('capacityEveningWeekday');
-    const capacityEveningWeekendInput = document.getElementById('capacityEveningWeekend');
-    const saveCapacityBtn = document.getElementById('saveCapacityBtn');
-    const morningCapacityText = document.getElementById('morning-capacity-text');
-    const eveningWeekdayCapacityText = document.getElementById('evening-weekday-capacity-text');
-    const eveningWeekendCapacityText = document.getElementById('evening-weekend-capacity-text');
-
-    // ====== UI Helpers ======
-    function showToast(msg, type='ok'){
-      toast.textContent = msg;
-      toast.className = '';
-      toast.classList.add('p-4', 'rounded-xl', 'border-l-4', 'shadow-xl', 'mb-6', 'animate-fade-in');
-      if (type === 'ok') {
-        toast.classList.add('bg-emerald-50', 'text-emerald-700', 'border-emerald-500');
-        toast.innerHTML = `<div class="flex items-center font-medium"><i class="fas fa-check-circle mr-2"></i> ${msg}</div>`;
-      } else {
-        toast.classList.add('bg-rose-50', 'text-rose-700', 'border-rose-500');
-        toast.innerHTML = `<div class="flex items-center font-medium"><i class="fas fa-exclamation-circle mr-2"></i> ${msg}</div>`;
-      }
-      toast.classList.remove('hidden');
-      setTimeout(()=>toast.classList.add('hidden'), 3500);
-    }
-
-    function capacityFor(dayIndex, shift) {
-      if (shift === 'sang') return capacitySettings.morning || 2;
-      return dayIndex <= 3 // T2 -> T5 (0 -> 3)
-        ? (capacitySettings.eveningWeekday || 4) 
-        : (capacitySettings.eveningWeekend || 5);
-    }
-
-    function renderEmployeeDropdown() {
-      empNameSelect.innerHTML = '<option value="">-- Chọn nhân viên --</option>';
-      employees.forEach(employee => {
-        const option = document.createElement('option');
-        option.value = employee;
-        option.textContent = employee;
-        empNameSelect.appendChild(option);
-      });
-    }
-
-    function renderEmployeeList() {
-      employeeList.innerHTML = '';
-      employees.forEach(employee => {
-        const li = document.createElement('li');
-        li.className = 'flex items-center justify-between p-2 bg-indigo-50 rounded-lg shadow-sm';
-        const nameSpan = document.createElement('span');
-        nameSpan.className = 'font-medium text-slate-700';
-        nameSpan.textContent = employee;
-        const delBtn = document.createElement('button');
-        delBtn.className = 'px-3 py-1 text-xs bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition-colors shadow-md';
-        delBtn.innerHTML = '<i class="fas fa-trash mr-1"></i> Xóa';
-        delBtn.addEventListener('click', async () => {
-          if (!isAdmin) return;
-          const updated = employees.filter(e => e !== employee);
-          await setDoc(doc(db, "settings", "employees"), { list: updated }, { merge: true });
-          showToast('Đã xóa nhân viên.', 'ok');
-        });
-        li.appendChild(nameSpan);
-        li.appendChild(delBtn);
-        employeeList.appendChild(li);
-      });
-    }
-
-    function loadCapacityInputs() {
-      capacityMorningInput.value = capacitySettings.morning || 2;
-      capacityEveningWeekdayInput.value = capacitySettings.eveningWeekday || 4;
-      capacityEveningWeekendInput.value = capacitySettings.eveningWeekend || 5;
-      morningCapacityText.textContent = capacitySettings.morning || 2;
-      eveningWeekdayCapacityText.textContent = capacitySettings.eveningWeekday || 4;
-      eveningWeekendCapacityText.textContent = capacitySettings.eveningWeekend || 5;
-    }
-
-    function updateWeekInput(){
-      weekStartInput.value = fmtISODate(currentWeekStart);
-    }
-
-    function renderDayChoices(){
-      dayChoices.innerHTML = '';
-      for (let i=0;i<7;i++){
-        const d = addDays(currentWeekStart,i);
-        const isToday = fmtISODate(d) === fmtISODate(getTodayStart());
-        const btn = document.createElement('button');
-        btn.type='button';
-        btn.dataset.dayIndex = i;
-        btn.className = `day-cell px-2 py-2 rounded-xl border-2 border-slate-300 bg-white hover:bg-indigo-50 text-center transition-all shadow-sm text-sm ${isToday ? 'border-indigo-500 ring-2 ring-indigo-200' : ''}`;
-        btn.innerHTML = `<div class="font-bold">${VN_DAYS[i]}</div><div class="text-xs text-slate-500">${d.getDate()}/${d.getMonth()+1}</div>`;
-        btn.addEventListener('click',()=>{
-          [...dayChoices.children].forEach(c=>c.classList.remove('selected'));
-          btn.classList.add('selected');
-          dayChoices.dataset.selected = i;
-        });
-        dayChoices.appendChild(btn);
-      }
-      dayChoices.children[0]?.click();
-    }
-
-    function listFor(dayIndex, shift){
-      return weekEntries.filter(e=>e.dayIndex===dayIndex && e.shift===shift);
-    }
-    function alreadyRegistered(name, dayIndex, shift){
-      const n = (name||'').trim().toLowerCase();
-      return weekEntries.some(e=> e.dayIndex===dayIndex && e.shift===shift && (e.name||'').trim().toLowerCase()===n);
-    }
-
-    function renderWeekGrid(){
-      const todayStart = getTodayStart(); // Lấy ngày hôm nay (00:00:00)
-      weekGrid.innerHTML = '';
-      
-      for (let i=0; i<7; i++){
-        const dayDate = addDays(currentWeekStart,i);
-        const isToday = fmtISODate(dayDate) === fmtISODate(todayStart);
+    <script>
+        dayjs.extend(window.dayjs_plugin_isoWeek);
+        dayjs.locale('vi');
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['"Be Vietnam Pro"', 'sans-serif'] },
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #f8fafc; color: #334155; }
+        .admin-only { display: none !important; }
+        .is-admin .admin-only { display: flex !important; }
+        .is-admin .admin-cell { display: table-cell !important; }
+        .name-column { position: sticky; left: 0; z-index: 20; background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(8px); border-right: 2px solid #f1f5f9; }
+        .shift-cell { transition: all 0.2s ease; cursor: pointer; }
+        #loader { position: fixed; inset: 0; background: rgba(255,255,255,0.9); backdrop-filter: blur(4px); z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s; }
+        #loader.active { opacity: 1; pointer-events: all; }
         
-        const col = document.createElement('div');
-        col.className=`bg-white/75 backdrop-blur-lg rounded-2xl sm:rounded-3xl shadow-lg border ${isToday ? 'border-indigo-400 ring-2 ring-indigo-200' : 'border-slate-100'} flex flex-col card-hover animate-fade-in`;
+        /* Màu sắc động cho ca làm việc */
+        .bg-shift-am { background-color: #f59e0b !important; color: white !important; } /* Màu vàng AM */
+        .bg-shift-pm { background-color: #2563eb !important; color: white !important; } /* Màu xanh PM */
+        .bg-shift-off { background-color: #f1f5f9 !important; color: #cbd5e1 !important; } /* Màu nghỉ */
+    </style>
+</head>
+<body class="antialiased">
 
-        const header = document.createElement('div');
-        header.className=`px-3 py-3 border-b-2 border-slate-100 flex items-center justify-between ${isToday ? 'bg-indigo-50/80' : 'bg-slate-50/80'} rounded-t-2xl sm:rounded-t-3xl`;
-        header.innerHTML = `
-          <div>
-            <div class="text-sm text-slate-500">${VN_DAYS[i]}</div>
-            <div class="text-xl font-extrabold ${isToday ? 'text-indigo-700' : 'text-slate-800'}">${dayDate.getDate()}/${dayDate.getMonth()+1}</div>
-          </div>
-          ${isToday ? '<span class="px-3 py-1 bg-indigo-500 text-white text-xs rounded-full font-bold shadow-md">HÔM NAY</span>' : ''}
-        `;
-        col.appendChild(header);
+    <div id="loader" class="active">
+        <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-600 mb-4"></div>
+        <span class="text-xs font-black text-slate-500 tracking-[0.3em] uppercase">Đang đồng bộ dữ liệu Cloud...</span>
+    </div>
 
-        ['sang','toi'].forEach(shift=>{
-          const cap = capacityFor(i, shift);
-          const items = listFor(i, shift);
-          const remain = cap - items.length;
-          const isFull = remain <= 0;
-
-          const wrap = document.createElement('div');
-          wrap.className=`p-3 border-b border-slate-100 last:border-b-0 shift-indicator ${shift === 'sang' ? 'shift-morning' : 'shift-evening'}`;
-
-          const title = document.createElement('div');
-          title.className='flex items-center justify-between mb-3';
-          title.innerHTML = `
-            <div class="font-bold flex items-center text-slate-700">
-              ${shift==='sang' ? '<i class="fas fa-sun text-amber-500 mr-2"></i>' : '<i class="fas fa-moon text-indigo-500 mr-2"></i>'}
-              ${shift==='sang'?'BUỔI SÁNG':'BUỔI TỐI'} 
-              <span class="text-xs text-slate-500 ml-2 font-normal">(Tối đa ${cap})</span>
+    <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 px-6 py-4">
+        <div class="max-w-[1440px] mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <div class="bg-blue-600 p-2.5 rounded-xl text-white shadow-lg shadow-blue-500/30">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black text-slate-800 leading-none">SmartSchedule <span class="text-blue-600">Pro</span></h1>
+                    <span id="statusLabel" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 inline-block">● Chế độ xem</span>
+                </div>
             </div>
-            <div class="text-xs font-bold px-2 py-1 rounded-full shadow-sm ${isFull ? 'text-rose-700 bg-rose-100' : 'text-emerald-700 bg-emerald-100'}">
-              ${isFull ? 'ĐỦ SỐ LƯỢNG' : `CÒN ${remain} SLOT`}
+            <div class="flex gap-2">
+                <button id="loginBtn" class="text-xs font-bold text-slate-600 bg-slate-100 px-5 py-2.5 rounded-full hover:bg-blue-50 transition">Admin Login</button>
+                <button onclick="location.reload()" class="admin-only bg-red-50 text-red-500 text-xs font-bold px-4 py-2 rounded-full hover:bg-red-100 transition">Thoát Admin</button>
             </div>
-          `;
-          wrap.appendChild(title);
+        </div>
+    </nav>
 
-          const list = document.createElement('div');
-          list.className='flex flex-col gap-2';
+    <main class="max-w-[1440px] mx-auto p-4 md:p-8 space-y-8">
+        <div class="flex flex-col lg:flex-row justify-between items-center gap-6">
+            <div class="flex items-center gap-4 bg-white p-2 pr-8 rounded-[24px] shadow-sm border border-slate-200">
+                <div class="flex gap-1">
+                    <button id="prevWeekBtn" class="p-4 hover:bg-slate-50 rounded-2xl text-slate-400 hover:text-blue-600 transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke-width="2.5"/></svg></button>
+                    <button id="nextWeekBtn" class="p-4 hover:bg-slate-50 rounded-2xl text-slate-400 hover:text-blue-600 transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-width="2.5"/></svg></button>
+                </div>
+                <div>
+                    <h2 id="weekRange" class="text-2xl font-black text-slate-800 tracking-tight">Xác định tuần...</h2>
+                    <p id="weekIdDisplay" class="text-[10px] font-mono text-slate-400 uppercase tracking-widest"></p>
+                </div>
+            </div>
+            <button id="captureBtn" class="w-full lg:w-auto bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-[20px] font-bold shadow-xl shadow-emerald-200 flex items-center justify-center gap-3 transition-all active:scale-95">
+                CHỤP LỊCH & GỬI ZALO
+            </button>
+        </div>
 
-          if (items.length===0){
-            const empty = document.createElement('div');
-            empty.className='text-xs text-slate-400 italic text-center py-3 bg-slate-50/80 rounded-xl';
-            empty.innerHTML = '<i class="far fa-frown mr-1"></i> Chưa có ai đăng ký ca này.';
-            list.appendChild(empty);
-          } else {
-            items
-              .slice()
-              .sort((a,b)=> a.createdAt.localeCompare(b.createdAt))
-              .forEach((e)=>{
-                const row = document.createElement('div');
-                row.className='group flex items-center px-4 py-3 bg-indigo-50 rounded-xl transition-colors hover:bg-indigo-100 border border-indigo-100 hover:border-indigo-200 shadow-sm';
-                
-                const infoWrapper = document.createElement('div');
-                infoWrapper.className='flex-1 flex items-start gap-2 min-w-0';
+        <div class="admin-only bg-gradient-to-r from-blue-600 to-indigo-700 p-6 rounded-[28px] shadow-xl flex flex-wrap gap-4 items-center justify-center border border-white/20">
+            <h3 class="text-white font-black text-sm uppercase tracking-widest w-full text-center mb-2">Quản Lý Nhân Sự Gốc</h3>
+            <input id="newEmpName" type="text" placeholder="Tên nhân viên..." class="bg-white/10 border border-white/20 p-3.5 rounded-xl text-white placeholder:text-white/50 text-sm font-bold outline-none focus:bg-white focus:text-slate-800 transition-all w-64">
+            <select id="newEmpDept" class="bg-white p-3.5 rounded-xl text-sm font-black text-slate-700 outline-none cursor-pointer">
+                <option value="BEP">KHỐI NHÀ BẾP</option>
+                <option value="PV_TN">PHỤC VỤ & THU NGÂN</option>
+            </select>
+            <input id="newEmpShift" type="text" placeholder="Ca mặc định (Vd: 8h-16h)" class="bg-white/10 border border-white/20 p-3.5 rounded-xl text-white placeholder:text-white/50 text-sm font-bold outline-none focus:bg-white focus:text-slate-800 transition-all w-48">
+            <button id="addEmpBtn" class="bg-white text-blue-700 px-8 py-3.5 rounded-xl font-black text-sm hover:scale-105 transition shadow-lg">LƯU NHÂN SỰ</button>
+        </div>
 
-                if (isAdmin){
-                  const delBtn = document.createElement('button');
-                  delBtn.title='Xóa đăng ký';
-                  delBtn.className='opacity-0 group-hover:opacity-100 flex-shrink-0 w-8 h-8 rounded-full bg-rose-500 text-white text-xs hover:bg-rose-600 transition-opacity flex items-center justify-center shadow-md mt-1';
-                  delBtn.innerHTML = '<i class="fas fa-times text-sm"></i>';
-                  delBtn.addEventListener('click', async ()=>{
-                    const key = weekKeyOf(currentWeekStart);
-                    const ref = doc(db, "weeks", key);
-                    try {
-                      await runTransaction(db, async (tx) => {
-                        const snap = await tx.get(ref);
-                        const cur = snap.exists() ? (snap.data().entries || []) : [];
-                        const keep = cur.filter(x => !(x.dayIndex===e.dayIndex && x.shift===e.shift && x.name===e.name && x.createdAt===e.createdAt));
-                        tx.set(ref, { entries: keep }, { merge: true });
-                      });
-                      showToast('Đã xóa đăng ký.', 'ok');
-                    } catch (err) {
-                      console.error(err);
-                      showToast('Lỗi khi xóa đăng ký.', 'err');
-                    }
-                  });
-                  infoWrapper.appendChild(delBtn);
-                }
-                
-                const info = document.createElement('div');
-                info.className='flex-1 min-w-0';
-                
-                const name = document.createElement('div');
-                name.className='text-sm font-bold truncate text-indigo-700';
-                name.textContent = e.name;
-                info.appendChild(name);
-                
-                if (e.note) {
-                  const note = document.createElement('div');
-                  note.className='text-xs text-slate-500 italic mt-1'; 
-                  note.innerHTML = `<i class="fas fa-sticky-note mr-1"></i> ${e.note}`;
-                  info.appendChild(note);
-                }
-                
-                infoWrapper.appendChild(info);
-                
-                const right = document.createElement('div');
-                right.className='flex-shrink-0 text-xs font-medium text-slate-500 ml-3 pt-1';
-                const time = new Date(e.createdAt);
-                right.innerHTML = `<span>${time.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>`;
+        <div id="capture-area" class="bg-white p-6 md:p-10 rounded-[40px] shadow-sm border border-slate-100 overflow-hidden">
+            <div class="space-y-12">
+                <div>
+                    <div class="flex items-center gap-3 mb-6"><div class="w-1.5 h-6 bg-orange-500 rounded-full"></div><h3 class="font-black text-slate-800 text-lg uppercase tracking-wider">Khối Nhà Bếp</h3></div>
+                    <div class="overflow-x-auto rounded-3xl border border-slate-100 shadow-sm">
+                        <table class="w-full text-center border-collapse"><thead id="headBEP"></thead><tbody id="bodyBEP"></tbody></table>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex items-center gap-3 mb-6"><div class="w-1.5 h-6 bg-blue-600 rounded-full"></div><h3 class="font-black text-slate-800 text-lg uppercase tracking-wider">Phục Vụ & Thu Ngân</h3></div>
+                    <div class="overflow-x-auto rounded-3xl border border-slate-100 shadow-sm">
+                        <table class="w-full text-center border-collapse"><thead id="headPV"></thead><tbody id="bodyPV"></tbody></table>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-10 pt-6 border-t border-slate-100 flex justify-between items-center text-[10px] font-bold text-slate-300 uppercase tracking-[0.3em]">
+                <span>SmartSchedule Pro Cloud</span>
+                <span id="timestamp"></span>
+            </div>
+        </div>
+    </main>
 
-                row.appendChild(infoWrapper);
-                row.appendChild(right);
-                list.appendChild(row);
-              });
-          }
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-          wrap.appendChild(list);
-          col.appendChild(wrap);
-        });
-
-        weekGrid.appendChild(col);
-      }
-    }
-
-    // ====== Firestore realtime subscriptions ======
-    function subscribeEmployees() {
-      if (unsubscribeEmployees) unsubscribeEmployees();
-      const ref = doc(db, "settings", "employees");
-      unsubscribeEmployees = onSnapshot(ref, (snap)=>{
-        employees = snap.exists() ? (snap.data().list || []) : [];
-        renderEmployeeDropdown();
-        if (isAdmin) renderEmployeeList();
-      });
-    }
-
-    function subscribeCapacity() {
-      if (unsubscribeCapacity) unsubscribeCapacity();
-      const ref = doc(db, "settings", "capacity");
-      unsubscribeCapacity = onSnapshot(ref, (snap)=>{
-        capacitySettings = snap.exists() ? snap.data() : { morning:2, eveningWeekday:4, eveningWeekend:5 };
-        loadCapacityInputs();
-        renderWeekGrid();
-      });
-    }
-
-    function subscribeWeek(date) {
-      if (unsubscribeWeek) unsubscribeWeek();
-      const key = weekKeyOf(date);
-      const ref = doc(db, "weeks", key);
-      unsubscribeWeek = onSnapshot(ref, (snap)=>{
-        weekEntries = snap.exists() ? (snap.data().entries || []) : [];
-        renderWeekGrid();
-      });
-    }
-
-    // ====== Sự kiện ======
-    weekStartInput.addEventListener('change', (e)=>{
-      let d = new Date(e.target.value);
-      currentWeekStart = startOfWeek(d);
-      updateWeekInput();
-      renderDayChoices();
-      subscribeWeek(currentWeekStart);
-    });
-    prevWeekBtn.addEventListener('click', ()=>{
-      currentWeekStart = addDays(currentWeekStart, -7);
-      updateWeekInput();
-      renderDayChoices();
-      subscribeWeek(currentWeekStart);
-    });
-    nextWeekBtn.addEventListener('click', ()=>{
-      currentWeekStart = addDays(currentWeekStart, 7);
-      updateWeekInput();
-      renderDayChoices();
-      subscribeWeek(currentWeekStart);
-    });
-
-    adminPasswordInput.addEventListener('keyup', (e) => {
-        if (e.key === 'Enter') {
-            adminToggleBtn.click();
-        }
-    });
-
-    signupForm.addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      const name = (empNameSelect.value||'').trim();
-      if (!name){ showToast('Vui lòng chọn nhân viên.', 'err'); return; }
-      const shift = shiftSelect.value;
-      const dayIndex = parseInt(dayChoices.dataset.selected || '0');
-      const note = (noteInput.value||'').trim();
-
-      if (alreadyRegistered(name, dayIndex, shift)){
-        showToast('Nhân viên đã đăng ký ca này rồi.', 'err');
-        return;
-      }
-      const cap = capacityFor(dayIndex, shift);
-      const current = listFor(dayIndex, shift);
-      if (current.length >= cap){
-        showToast('Ca đã đủ số lượng.', 'err');
-        return;
-      }
-
-      const entry = { name, shift, dayIndex, note, createdAt: new Date().toISOString() };
-      const key = weekKeyOf(currentWeekStart);
-      const ref = doc(db, "weeks", key);
-
-      try {
-        await runTransaction(db, async (tx) => {
-          const snap = await tx.get(ref);
-          const list = snap.exists() ? (snap.data().entries || []) : [];
-          const duplicate = list.some(e => e.dayIndex===dayIndex && e.shift===shift && (e.name||'').trim().toLowerCase()===name.toLowerCase());
-          if (duplicate) throw new Error('DUPLICATE');
-          const count = list.filter(e => e.dayIndex===dayIndex && e.shift===shift).length;
-          if (count >= capacityFor(dayIndex, shift)) throw new Error('FULL');
-          list.push(entry);
-          tx.set(ref, { entries: list }, { merge: true });
-        });
-
-        showToast('Đăng ký thành công!', 'ok');
-        noteInput.value = '';
-      } catch (err) {
-        if (err && err.message === 'DUPLICATE') {
-          showToast('Nhân viên đã đăng ký ca này rồi.', 'err');
-        } else if (err && err.message === 'FULL') {
-          showToast('Ca đã đủ số lượng.', 'err');
-        } else {
-          console.error(err);
-          showToast('Lỗi khi đăng ký. Vui lòng thử lại.', 'err');
-        }
-      }
-    });
-
-    adminToggleBtn.addEventListener('click', ()=>{
-      if (!isAdmin){
-        if (adminPasswordInput.value === ADMIN_PASSWORD){
-          isAdmin = true;
-          adminToggleBtn.textContent = 'Đăng xuất';
-          adminToggleBtn.classList.add('bg-indigo-600');
-          exportBtn.disabled = false;
-          clearWeekBtn.disabled = false;
-          adminControls.classList.remove('hidden');
-          showToast('Đăng nhập admin thành công.', 'ok');
-          renderWeekGrid();
-          renderEmployeeList();
-          loadCapacityInputs();
-        } else {
-          showToast('Sai mật khẩu admin.', 'err');
-        }
-      } else {
-        isAdmin = false;
-        adminToggleBtn.textContent = 'Đăng nhập';
-        adminToggleBtn.classList.remove('bg-indigo-600');
-        exportBtn.disabled = true;
-        clearWeekBtn.disabled = true;
-        adminControls.classList.add('hidden');
-        showToast('Đã đăng xuất admin.', 'ok');
-        renderWeekGrid();
-      }
-    });
-
-    addEmployeeBtn.addEventListener('click', async () => {
-      const name = newEmployeeInput.value.trim();
-      if (!name) { showToast('Vui lòng nhập tên nhân viên.', 'err'); return; }
-      if (!isAdmin) { showToast('Chỉ admin mới thêm nhân viên.', 'err'); return; }
-
-      const setRef = doc(db, "settings", "employees");
-      try {
-        await runTransaction(db, async (tx) => {
-          const snap = await tx.get(setRef);
-          const list = snap.exists() ? (snap.data().list || []) : [];
-          if (list.map(e => e.toLowerCase()).includes(name.toLowerCase())) throw new Error('EXIST');
-          list.push(name);
-          list.sort((a, b) => a.localeCompare(b, 'vi', { sensitivity: 'base' }));
-          tx.set(setRef, { list }, { merge: true });
-        });
-        newEmployeeInput.value = '';
-        showToast('Đã thêm nhân viên mới.', 'ok');
-      } catch (err) {
-        if (err.message === 'EXIST') showToast('Nhân viên đã tồn tại.', 'err');
-        else { console.error(err); showToast('Lỗi khi thêm nhân viên.', 'err'); }
-      }
-    });
-
-    saveCapacityBtn.addEventListener('click', async () => {
-      if (!isAdmin) { showToast('Chỉ admin mới chỉnh sức chứa.', 'err'); return; }
-      const morning = parseInt(capacityMorningInput.value);
-      const eveningWeekday = parseInt(capacityEveningWeekdayInput.value);
-      const eveningWeekend = parseInt(capacityEveningWeekendInput.value);
-      
-      if (isNaN(morning) || isNaN(eveningWeekday) || isNaN(eveningWeekend) || morning < 1 || eveningWeekday < 1 || eveningWeekend < 1) {
-        showToast('Sức chứa phải là số nguyên dương.', 'err');
-        return;
-      }
-      try {
-        await setDoc(doc(db, "settings", "capacity"), { morning, eveningWeekday, eveningWeekend }, { merge: true });
-        showToast('Đã lưu cài đặt sức chứa.', 'ok');
-      } catch (err) {
-        console.error(err);
-        showToast('Lỗi khi lưu sức chứa.', 'err');
-      }
-    });
-
-    exportBtn.addEventListener('click', ()=>{
-      if (!isAdmin) return;
-      let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-      csvContent += "LỊCH LÀM VIỆC - TUẦN BẮT ĐẦU " + fmtISODate(currentWeekStart) + "\r\n\r\n";
-      csvContent += "Ngày,Buổi,Họ tên,Ghi chú,Giờ đăng ký\r\n";
-      const data = weekEntries.slice().sort((a,b)=> a.dayIndex-b.dayIndex || a.shift.localeCompare(b.shift) || a.createdAt.localeCompare(b.createdAt));
-      data.forEach(entry=>{
-        const dayDate = addDays(currentWeekStart, entry.dayIndex);
-        const dateStr = `${dayDate.getDate()}/${dayDate.getMonth()+1}/${dayDate.getFullYear()}`;
-        const shiftName = entry.shift === 'sang' ? 'Sáng' : 'Tối';
-        const time = new Date(entry.createdAt);
-        const timeStr = time.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) + ' ' + time.toLocaleDateString('vi-VN');
-        const escapeCSV = (str) => {
-          if (!str) return '';
-          str = String(str);
-          if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-            return '"' + str.replace(/"/g, '""') + '"';
-          }
-          return str;
+        const firebaseConfig = {
+            apiKey: "AIzaSyCexNUfw-tC7c4jx2HM41x1dL85DijkZiE",
+            authDomain: "lichlamviec-4b977.firebaseapp.com",
+            projectId: "lichlamviec-4b977",
+            storageBucket: "lichlamviec-4b977.firebasestorage.app",
+            messagingSenderId: "1011750021990",
+            appId: "1:1011750021990:web:6aca1e42668defde9f76a7"
         };
-        csvContent += `${escapeCSV(dateStr)},${escapeCSV(shiftName)},${escapeCSV(entry.name)},${escapeCSV(entry.note)},${escapeCSV(timeStr)}\r\n`;
-      });
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `LichLamViec_${fmtISODate(currentWeekStart)}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      showToast('Đã xuất file Excel (CSV).', 'ok');
-    });
 
-    clearWeekBtn.addEventListener('click', async ()=>{
-      if (!isAdmin) return;
-      if (!confirm('Bạn có CHẮC CHẮN muốn xóa TẤT CẢ đăng ký trong tuần này không? Hành động này không thể hoàn tác.')) return;
-      const key = weekKeyOf(currentWeekStart);
-      try {
-        await setDoc(doc(db, "weeks", key), { entries: [] }, { merge: true });
-        showToast('Đã xóa toàn bộ đăng ký tuần.', 'ok');
-      } catch (err) {
-        console.error(err);
-        showToast('Lỗi khi xóa tuần.', 'err');
-      }
-    });
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-    // ====== Khởi tạo ======
-    function init(){
-      currentWeekStart = startOfWeek(new Date());
-      updateWeekInput();
-      renderDayChoices();
-      subscribeWeek(currentWeekStart);
-      subscribeEmployees();
-      subscribeCapacity();
-    }
-    init();
-  </script>
+        let isAdmin = false;
+        let currentWeekStart = dayjs().startOf('isoWeek');
+        let currentEmployees = [];
+        let masterEmployees = [];
 
-  <!-- NÂNG CẤP: Di chuyển script hiệu ứng nền xuống cuối body -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.net.min.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        try {
-            VANTA.NET({
-                el: "#vanta-bg",
-                mouseControls: true,
-                touchControls: true,
-                gyroControls: false,
-                minHeight: 200.00,
-                minWidth: 200.00,
-                scale: 1.00,
-                scaleMobile: 1.00,
-                color: 0x8955ff,          // Màu của các đường line (tím)
-                backgroundColor: 0x1a1839, // Màu nền (xanh đen)
-                points: 12.00,
-                maxDistance: 22.00,
-                spacing: 18.00
-            })
-        } catch (e) {
-            console.error("Lỗi khởi tạo Vanta.js:", e);
-            // Fallback: Nếu Vanta lỗi, thêm lại nền gradient cũ
-            document.body.classList.add('bg-gradient-to-br', 'from-gray-50', 'to-indigo-100');
+        const holidaysVN = {
+            '01/01': 'Tết Dương Lịch', '30/04': 'Giải Phóng', '01/05': 'Quốc Tế LĐ',
+            '02/09': 'Quốc Khánh', '24/12': 'Giáng Sinh', '25/12': 'Giáng Sinh'
+        };
+
+        // Hàm xác định màu dựa trên thời gian
+        function getShiftColorClass(timeStr, isStatus) {
+            if (!isStatus || timeStr.toUpperCase() === 'OFF') return 'bg-shift-off';
+            
+            // Trích xuất số giờ đầu tiên từ chuỗi (ví dụ "08:00 - 16:00" lấy 8)
+            const hourMatch = timeStr.match(/(\d+)/);
+            if (hourMatch) {
+                const hour = parseInt(hourMatch[0]);
+                if (hour >= 1 && hour < 13) return 'bg-shift-am'; // 1h sáng đến 12h59 trưa
+                if (hour >= 13 || hour === 0) return 'bg-shift-pm'; // 13h chiều đến đêm
+            }
+            return 'bg-shift-pm'; // Mặc định
         }
-    });
-  </script>
+
+        async function loadMasterData() {
+            const snap = await getDoc(doc(db, "settings", "master_employees"));
+            masterEmployees = snap.exists() ? snap.data().list : [];
+        }
+
+        async function loadWeekData() {
+            document.getElementById('loader').classList.add('active');
+            await loadMasterData();
+            const weekId = currentWeekStart.format('YYYY-MM-DD');
+            document.getElementById('weekIdDisplay').innerText = `ID: WEEK-${weekId}`;
+            renderHeaders();
+            try {
+                const docSnap = await getDoc(doc(db, "schedules", weekId));
+                if (docSnap.exists()) {
+                    currentEmployees = docSnap.data().employees;
+                } else {
+                    currentEmployees = masterEmployees.map(emp => ({
+                        ...emp,
+                        schedule: Array(7).fill({ status: true, time: emp.shiftDefault })
+                    }));
+                }
+                renderTables();
+            } catch (e) { console.error(e); } 
+            finally { document.getElementById('loader').classList.remove('active'); }
+        }
+
+        async function saveCurrentData() {
+            if (!isAdmin) return;
+            const weekId = currentWeekStart.format('YYYY-MM-DD');
+            await setDoc(doc(db, "schedules", weekId), { employees: currentEmployees });
+            renderTables();
+        }
+
+        async function saveToMaster() {
+            const newList = currentEmployees.map(e => ({
+                id: e.id, name: e.name, dept: e.dept, shiftDefault: e.shiftDefault
+            }));
+            await setDoc(doc(db, "settings", "master_employees"), { list: newList });
+        }
+
+        function renderHeaders() {
+            const start = currentWeekStart;
+            document.getElementById('weekRange').innerText = `Tuần ${start.format('DD/MM')} - ${start.add(6, 'day').format('DD/MM')}`;
+            ['headBEP', 'headPV'].forEach(id => {
+                const head = document.getElementById(id);
+                let html = `<tr class="bg-slate-50"><th class="p-5 text-left name-column text-[10px] font-black text-slate-400 uppercase tracking-widest w-[200px]">Nhân sự</th>`;
+                for(let i=0; i<7; i++) {
+                    const d = start.add(i, 'day');
+                    const holiday = holidaysVN[d.format('DD/MM')];
+                    const isWeekend = d.day() === 0 || d.day() === 6;
+                    html += `<th class="py-4 border-l border-slate-100 ${isWeekend ? 'bg-orange-50/30' : ''}">
+                        <div class="flex flex-col items-center">
+                            <span class="text-[10px] font-black uppercase ${isWeekend ? 'text-orange-600' : 'text-slate-400'}">${d.format('dddd')}</span>
+                            <span class="text-2xl font-black text-slate-800">${d.format('DD')}</span>
+                            ${holiday ? `<span class="mt-1 px-2 py-0.5 bg-red-500 text-white text-[7px] font-bold rounded-full">${holiday}</span>` : ''}
+                        </div>
+                    </th>`;
+                }
+                html += `<th class="admin-only admin-cell p-2 bg-red-50 text-red-500 text-[10px] font-black">XÓA</th></tr>`;
+                head.innerHTML = html;
+            });
+        }
+
+        function renderTables() {
+            const bBep = document.getElementById('bodyBEP');
+            const bPv = document.getElementById('bodyPV');
+            bBep.innerHTML = ""; bPv.innerHTML = "";
+            currentEmployees.forEach(emp => {
+                const row = document.createElement('tr');
+                row.className = "border-b border-slate-50";
+                row.innerHTML = `
+                    <td class="p-4 name-column text-left">
+                        <div class="text-sm font-black text-slate-700">${emp.name}</div>
+                        <div class="text-[9px] font-bold text-slate-400 uppercase mt-1">🕒 Gốc: ${emp.shiftDefault}</div>
+                    </td>
+                    ${emp.schedule.map((d, i) => {
+                        const colorClass = getShiftColorClass(d.time, d.status);
+                        return `<td class="p-1.5 border-l border-slate-50">
+                            <div data-action="toggle" data-uid="${emp.id}" data-day="${i}"
+                                 class="shift-cell mx-auto w-full min-w-[100px] h-[55px] rounded-[15px] flex flex-col items-center justify-center shadow-sm ${colorClass}">
+                                <span class="text-[14px] font-black tracking-tight">${d.time}</span>
+                                <span class="text-[8px] font-bold uppercase opacity-70">${d.status ? 'Làm việc' : 'Nghỉ'}</span>
+                            </div>
+                        </td>`
+                    }).join('')}
+                    <td class="admin-only admin-cell p-2">
+                        <button data-action="delete" data-uid="${emp.id}" class="text-slate-300 hover:text-red-500 font-bold">✕</button>
+                    </td>
+                `;
+                if(emp.dept === 'BEP') bBep.appendChild(row); else bPv.appendChild(row);
+            });
+            document.body.classList.toggle('is-admin', isAdmin);
+        }
+
+        document.getElementById('prevWeekBtn').onclick = () => { currentWeekStart = currentWeekStart.subtract(1, 'week'); loadWeekData(); };
+        document.getElementById('nextWeekBtn').onclick = () => { currentWeekStart = currentWeekStart.add(1, 'week'); loadWeekData(); };
+        document.getElementById('loginBtn').onclick = () => {
+            if (prompt("Mật khẩu Admin:") === "thaithae2025@") {
+                isAdmin = true;
+                document.getElementById('statusLabel').innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> QUẢN TRỊ VIÊN`;
+                document.getElementById('loginBtn').style.display = 'none';
+                renderTables();
+            }
+        };
+
+        document.getElementById('addEmpBtn').onclick = async () => {
+            const name = document.getElementById('newEmpName').value;
+            const dept = document.getElementById('newEmpDept').value;
+            const shift = document.getElementById('newEmpShift').value || "9h-17h";
+            if (!name) return;
+            const newPerson = { id: Date.now(), name, dept, shiftDefault: shift, schedule: Array(7).fill({ status: true, time: shift }) };
+            currentEmployees.push(newPerson);
+            await saveCurrentData();
+            await saveToMaster();
+            document.getElementById('newEmpName').value = "";
+        };
+
+        document.getElementById('captureBtn').onclick = async () => {
+            const canvas = await html2canvas(document.getElementById('capture-area'), { scale: 2 });
+            canvas.toBlob(blob => {
+                navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+                alert("✨ Đã copy ảnh lịch! Hãy dán (Ctrl+V) vào Zalo.");
+            });
+        };
+
+        const handleAction = async (e) => {
+            if(!isAdmin) return;
+            const btn = e.target.closest('[data-action]');
+            if(!btn) return;
+            const { action, uid, day } = btn.dataset;
+            const emp = currentEmployees.find(ex => ex.id == uid);
+            if(action === 'delete' && confirm("Xóa nhân sự này?")) {
+                currentEmployees = currentEmployees.filter(ex => ex.id != uid);
+                await saveCurrentData(); await saveToMaster();
+            } else if (action === 'toggle') {
+                const dIdx = parseInt(day);
+                if(emp.schedule[dIdx].status) {
+                    emp.schedule[dIdx] = { status: false, time: 'OFF' };
+                } else {
+                    const t = prompt("Nhập giờ làm (Vd: 7h-15h):", emp.shiftDefault);
+                    if(t) emp.schedule[dIdx] = { status: true, time: t };
+                }
+                await saveCurrentData();
+            }
+        };
+
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('#bodyBEP') || e.target.closest('#bodyPV')) handleAction(e);
+        });
+
+        loadWeekData();
+    </script>
 </body>
 </html>
