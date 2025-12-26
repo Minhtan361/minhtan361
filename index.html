@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lịch Làm Việc</title>
+    <title>Lịch Làm Việc Vuýp - Professional</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.7/dayjs.min.js"></script>
@@ -23,100 +23,162 @@
         }
     </script>
     <style>
-        body { background-color: #f8fafc; color: #334155; }
+        body { background-color: #0f172a; color: #e2e8f0; overflow-x: hidden; }
+        
+        /* 3D Animated Background */
+        .bg-3d-container { position: fixed; inset: 0; z-index: -1; overflow: hidden; background: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%); }
+        .shape { position: absolute; filter: blur(60px); opacity: 0.3; animation: float 15s infinite ease-in-out; }
+        .shape-1 { top: -10%; left: -10%; width: 600px; height: 600px; background: #4f46e5; border-radius: 40% 60% 70% 30%; }
+        .shape-2 { bottom: -10%; right: -10%; width: 500px; height: 500px; background: #ec4899; border-radius: 60% 40% 30% 70%; animation-delay: -5s; }
+        @keyframes float { 0%, 100% { transform: translate(0, 0) rotate(0deg); } 50% { transform: translate(30px, 50px) rotate(10deg); } }
+
+        /* UI Components */
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .name-column { position: sticky; left: 0; z-index: 20; background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(8px); border-right: 1px solid rgba(255,255,255,0.1); }
+        
+        /* Shift Colors */
+        .bg-shift-am { background: linear-gradient(135deg, #f59e0b, #d97706) !important; color: white !important; }
+        .bg-shift-pm { background: linear-gradient(135deg, #3b82f6, #2563eb) !important; color: white !important; }
+        .bg-shift-off { background: rgba(255,255,255,0.05) !important; color: #64748b !important; border: 1px dashed rgba(255,255,255,0.1); }
+        .bg-shift-long { background: linear-gradient(135deg, #fef9c3, #fde047) !important; color: #854d0e !important; }
+
+        /* Admin/Modal */
         .admin-only { display: none !important; }
         .is-admin .admin-only { display: flex !important; }
         .is-admin .admin-cell { display: table-cell !important; }
-        .name-column { position: sticky; left: 0; z-index: 20; background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(8px); border-right: 2px solid #f1f5f9; }
-        .shift-cell { transition: all 0.2s ease; cursor: pointer; }
-        #loader { position: fixed; inset: 0; background: rgba(255,255,255,0.9); backdrop-filter: blur(4px); z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s; }
-        #loader.active { opacity: 1; pointer-events: all; }
-        
-        /* Màu sắc động cho ca làm việc */
-        .bg-shift-am { background-color: #f59e0b !important; color: white !important; } /* Màu vàng AM */
-        .bg-shift-pm { background-color: #2563eb !important; color: white !important; } /* Màu xanh PM */
-        .bg-shift-off { background-color: #f1f5f9 !important; color: #cbd5e1 !important; } /* Màu nghỉ */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 100; display: none; align-items: center; justify-content: center; }
+        .modal-overlay.open { display: flex; }
+
+        /* --- TỐI ƯU CHỤP ẢNH (FIXED) --- */
+        .capture-mode { 
+            background: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%) !important; 
+            padding: 60px !important; 
+            width: 1200px !important; /* Cố định chiều rộng khi chụp để tránh vỡ layout */
+        }
+        .capture-mode .glass-card { 
+            background: rgba(15, 23, 42, 0.9) !important; /* Làm nền đậm hơn chút để nổi bật khi chụp */
+            border: 1px solid rgba(255, 255, 255, 0.15) !important; 
+        }
+        .capture-mode .name-column { position: static !important; background: transparent !important; }
+        .capture-mode .text-white, .capture-mode h3 { color: #ffffff !important; }
     </style>
 </head>
 <body class="antialiased">
 
-    <div id="loader" class="active">
-        <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-600 mb-4"></div>
-        <span class="text-xs font-black text-slate-500 tracking-[0.3em] uppercase">Đang đồng bộ dữ liệu Cloud...</span>
+    <div class="bg-3d-container"><div class="shape shape-1"></div><div class="shape shape-2"></div></div>
+
+    <div id="loader" class="fixed inset-0 bg-[#0f172a] z-[200] flex flex-col items-center justify-center transition-opacity duration-500">
+        <div class="w-16 h-16 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+        <p class="mt-4 text-[10px] font-black text-blue-400 tracking-[0.3em] uppercase">Đang tải dữ liệu...</p>
     </div>
 
-    <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 px-6 py-4">
-        <div class="max-w-[1440px] mx-auto flex justify-between items-center">
+    <nav class="sticky top-0 z-50 glass px-6 py-4 mb-6">
+        <div class="max-w-[1400px] mx-auto flex justify-between items-center">
             <div class="flex items-center gap-4">
-                <div class="bg-blue-600 p-2.5 rounded-xl text-white shadow-lg shadow-blue-500/30">
+                <div class="bg-blue-600 p-2 rounded-xl text-white">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                 </div>
                 <div>
-                    <h1 class="text-xl font-black text-slate-800 leading-none">Lịch Làm Việc <span class="text-blue-600">Vuýp</span></h1>
-                    <span id="statusLabel" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 inline-block">● Chế độ xem</span>
+                    <h1 class="text-xl font-black text-white">LỊCH <span class="text-blue-400">VUÝP</span></h1>
+                    <span id="statusLabel" class="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em]">Chế độ: Khách</span>
                 </div>
             </div>
             <div class="flex gap-2">
-                <button id="loginBtn" class="text-xs font-bold text-slate-600 bg-slate-100 px-5 py-2.5 rounded-full hover:bg-blue-50 transition">Admin Login</button>
-                <button onclick="location.reload()" class="admin-only bg-red-50 text-red-500 text-xs font-bold px-4 py-2 rounded-full hover:bg-red-100 transition">Thoát Admin</button>
+                <button id="loginBtn" class="text-xs font-bold text-white bg-white/10 px-5 py-2.5 rounded-full hover:bg-white/20 transition">Admin Login</button>
+                <button onclick="location.reload()" class="admin-only bg-red-500/20 text-red-300 border border-red-500/30 text-xs font-bold px-4 py-2 rounded-full">Thoát</button>
             </div>
         </div>
     </nav>
 
-    <main class="max-w-[1440px] mx-auto p-4 md:p-8 space-y-8">
-        <div class="flex flex-col lg:flex-row justify-between items-center gap-6">
-            <div class="flex items-center gap-4 bg-white p-2 pr-8 rounded-[24px] shadow-sm border border-slate-200">
+    <main class="max-w-[1400px] mx-auto p-4 md:p-6 pb-24">
+        <div class="flex flex-col lg:flex-row justify-between items-center gap-6 mb-8">
+            <div class="flex items-center gap-4 glass p-2 pr-8 rounded-[24px] w-full lg:w-auto">
                 <div class="flex gap-1">
-                    <button id="prevWeekBtn" class="p-4 hover:bg-slate-50 rounded-2xl text-slate-400 hover:text-blue-600 transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke-width="2.5"/></svg></button>
-                    <button id="nextWeekBtn" class="p-4 hover:bg-slate-50 rounded-2xl text-slate-400 hover:text-blue-600 transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-width="2.5"/></svg></button>
+                    <button id="prevWeekBtn" class="p-4 hover:bg-white/10 rounded-2xl text-slate-300"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke-width="2.5"/></svg></button>
+                    <button id="nextWeekBtn" class="p-4 hover:bg-white/10 rounded-2xl text-slate-300"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-width="2.5"/></svg></button>
                 </div>
                 <div>
-                    <h2 id="weekRange" class="text-2xl font-black text-slate-800 tracking-tight">Xác định tuần...</h2>
-                    <p id="weekIdDisplay" class="text-[10px] font-mono text-slate-400 uppercase tracking-widest"></p>
+                    <h2 id="weekRange" class="text-xl md:text-2xl font-black text-white">...</h2>
+                    <p id="weekIdDisplay" class="text-[9px] font-mono text-slate-500 uppercase tracking-widest"></p>
                 </div>
             </div>
-            <button id="captureBtn" class="w-full lg:w-auto bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-[20px] font-bold shadow-xl shadow-emerald-200 flex items-center justify-center gap-3 transition-all active:scale-95">
-                Chụp nè
+            <button id="captureBtn" class="w-full lg:w-auto bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white px-10 py-4 rounded-[20px] font-black shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-3 transition-all active:scale-95">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
+                XUẤT ẢNH LỊCH
             </button>
         </div>
 
-        <div class="admin-only bg-gradient-to-r from-blue-600 to-indigo-700 p-6 rounded-[28px] shadow-xl flex flex-wrap gap-4 items-center justify-center border border-white/20">
-            <h3 class="text-white font-black text-sm uppercase tracking-widest w-full text-center mb-2">Quản Lý Nhân Sự Gốc</h3>
-            <input id="newEmpName" type="text" placeholder="Tên nhân viên..." class="bg-white/10 border border-white/20 p-3.5 rounded-xl text-white placeholder:text-white/50 text-sm font-bold outline-none focus:bg-white focus:text-slate-800 transition-all w-64">
-            <select id="newEmpDept" class="bg-white p-3.5 rounded-xl text-sm font-black text-slate-700 outline-none cursor-pointer">
+        <div class="admin-only glass p-6 rounded-[28px] flex flex-wrap gap-4 items-center justify-center mb-8">
+            <input id="newEmpName" type="text" placeholder="Tên nhân viên..." class="bg-black/30 border border-white/10 p-3.5 rounded-xl text-white text-sm outline-none w-full md:w-64">
+            <select id="newEmpDept" class="bg-black/30 border border-white/10 text-white p-3.5 rounded-xl text-sm outline-none w-full md:w-auto">
                 <option value="BEP">BẾP</option>
                 <option value="PV_TN">PHỤC VỤ & THU NGÂN</option>
             </select>
-            <input id="newEmpShift" type="text" placeholder="Ca mặc định (Vd: 8h-16h)" class="bg-white/10 border border-white/20 p-3.5 rounded-xl text-white placeholder:text-white/50 text-sm font-bold outline-none focus:bg-white focus:text-slate-800 transition-all w-48">
-            <button id="addEmpBtn" class="bg-white text-blue-700 px-8 py-3.5 rounded-xl font-black text-sm hover:scale-105 transition shadow-lg">LƯU NHÂN SỰ</button>
+            <input id="newEmpShift" type="text" placeholder="Ca (vd: 17-23)" class="bg-black/30 border border-white/10 p-3.5 rounded-xl text-white text-sm outline-none w-full md:w-48">
+            <button id="addEmpBtn" class="bg-blue-600 text-white px-8 py-3.5 rounded-xl font-black text-sm hover:scale-105 transition">THÊM MỚI</button>
         </div>
 
-        <div id="capture-area" class="bg-white p-6 md:p-10 rounded-[40px] shadow-sm border border-slate-100 overflow-hidden">
+        <div id="capture-area" class="glass-card p-4 md:p-8 rounded-[32px] overflow-hidden">
             <div class="space-y-12">
                 <div>
-                    <div class="flex items-center gap-3 mb-6"><div class="w-1.5 h-6 bg-orange-500 rounded-full"></div><h3 class="font-black text-slate-800 text-lg uppercase tracking-wider">Bếp</h3></div>
-                    <div class="overflow-x-auto rounded-3xl border border-slate-100 shadow-sm">
+                    <div class="flex items-center gap-3 mb-6 pl-2">
+                        <div class="w-2 h-6 bg-orange-500 rounded-full shadow-[0_0_15px_rgba(249,115,22,0.5)]"></div>
+                        <h3 class="font-black text-white text-lg uppercase tracking-wider">BỘ PHẬN BẾP</h3>
+                    </div>
+                    <div class="overflow-x-auto rounded-3xl border border-white/5 bg-black/20">
                         <table class="w-full text-center border-collapse"><thead id="headBEP"></thead><tbody id="bodyBEP"></tbody></table>
                     </div>
                 </div>
                 <div>
-                    <div class="flex items-center gap-3 mb-6"><div class="w-1.5 h-6 bg-blue-600 rounded-full"></div><h3 class="font-black text-slate-800 text-lg uppercase tracking-wider">Phục Vụ & Thu Ngân</h3></div>
-                    <div class="overflow-x-auto rounded-3xl border border-slate-100 shadow-sm">
+                    <div class="flex items-center gap-3 mb-6 pl-2">
+                        <div class="w-2 h-6 bg-blue-500 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.5)]"></div>
+                        <h3 class="font-black text-white text-lg uppercase tracking-wider">PHỤC VỤ & THU NGÂN</h3>
+                    </div>
+                    <div class="overflow-x-auto rounded-3xl border border-white/5 bg-black/20">
                         <table class="w-full text-center border-collapse"><thead id="headPV"></thead><tbody id="bodyPV"></tbody></table>
                     </div>
                 </div>
             </div>
-            <div class="mt-10 pt-6 border-t border-slate-100 flex justify-between items-center text-[10px] font-bold text-slate-300 uppercase tracking-[0.3em]">
-                <span>SmartSchedule Pro Cloud</span>
+            <div class="mt-12 pt-6 border-t border-white/5 flex justify-between items-center text-[9px] font-bold text-slate-500 uppercase tracking-[0.4em]">
+                <span>VUÝP SCHEDULE SYSTEM v2.0</span>
                 <span id="timestamp"></span>
             </div>
         </div>
     </main>
 
+    <div id="loginModal" class="modal-overlay">
+        <div class="glass p-8 rounded-3xl w-[90%] max-w-sm text-center">
+            <h3 class="text-xl font-black text-white mb-6">Xác thực Admin</h3>
+            <input type="password" id="adminPassInput" class="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-white text-center mb-4 outline-none font-bold" placeholder="Nhập mật khẩu...">
+            <div class="flex gap-2">
+                <button onclick="closeModal('loginModal')" class="flex-1 py-3 text-slate-400 font-bold">Hủy</button>
+                <button id="confirmLoginBtn" class="flex-1 bg-blue-600 py-3 rounded-xl font-black text-white">Đăng nhập</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="shiftModal" class="modal-overlay">
+        <div class="glass p-6 rounded-3xl w-[90%] max-w-sm border border-white/20">
+            <h3 class="text-lg font-black text-white text-center mb-1">CẬP NHẬT CA LÀM</h3>
+            <p id="shiftModalName" class="text-[10px] text-blue-400 text-center mb-6 uppercase tracking-widest font-bold"></p>
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <button id="btnSetOff" class="bg-slate-700/50 text-slate-300 p-3 rounded-xl font-bold text-xs uppercase">Cho Nghỉ (OFF)</button>
+                <button id="btnSetFull" class="bg-blue-600/20 text-blue-300 p-3 rounded-xl font-bold text-xs border border-blue-500/30 uppercase">Ca Mặc Định</button>
+            </div>
+            <input type="text" id="customShiftInput" class="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-white font-black text-center mb-6 outline-none focus:border-blue-500" placeholder="Vd: 08:00 - 15:00">
+            <div class="flex gap-2">
+                <button onclick="closeModal('shiftModal')" class="flex-1 py-3 text-slate-400 font-bold">ĐÓNG</button>
+                <button id="saveShiftBtn" class="flex-1 bg-emerald-600 py-3 rounded-xl font-black text-white shadow-lg shadow-emerald-500/20">CẬP NHẬT</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+        // Firebase Config (Dựa trên thông tin của bạn)
         const firebaseConfig = {
             apiKey: "AIzaSyCexNUfw-tC7c4jx2HM41x1dL85DijkZiE",
             authDomain: "lichlamviec-4b977.firebaseapp.com",
@@ -134,85 +196,71 @@
         let currentEmployees = [];
         let masterEmployees = [];
 
-        const holidaysVN = {
-            '01/01': 'Tết Dương Lịch', '30/04': 'Giải Phóng', '01/05': 'Quốc Tế LĐ',
-            '02/09': 'Quốc Khánh', '24/12': 'Giáng Sinh', '25/12': 'Giáng Sinh'
-        };
+        // HÀM XỬ LÝ NGÀY LỄ
+        function getVNHoliday(date) {
+            const d = date.date();
+            const m = date.month() + 1;
+            const y = date.year();
+            const dm = `${d}/${m}`;
+            const solarHolidays = {
+                "1/1": "Tết Dương Lịch", "14/2": "Valentine", "8/3": "8/3", "30/4": "30/4", "1/5": "1/5",
+                "1/6": "Thiếu nhi", "2/9": "Quốc Khánh", "20/10": "Phụ nữ VN", "20/11": "Nhà giáo", "24/12": "Noel"
+            };
+            const lunarHolidays = {
+                "28/1/2025": "30 Tết", "29/1/2025": "Mùng 1 Tết", "30/1/2025": "Mùng 2", "31/1/2025": "Mùng 3", "7/4/2025": "Giỗ tổ Hùng Vương",
+                "16/2/2026": "30 Tết", "17/2/2026": "Mùng 1 Tết", "18/2/2026": "Mùng 2", "19/2/2026": "Mùng 3", "26/4/2026": "Giỗ tổ Hùng Vương"
+            };
+            return solarHolidays[dm] || lunarHolidays[`${d}/${m}/${y}`] || null;
+        }
 
-        // Hàm xác định màu dựa trên thời gian
+        window.openModal = (id) => document.getElementById(id).classList.add('open');
+        window.closeModal = (id) => document.getElementById(id).classList.remove('open');
+
         function getShiftColorClass(timeStr, isStatus) {
             if (!isStatus || timeStr.toUpperCase() === 'OFF') return 'bg-shift-off';
+            if (timeStr.length > 15) return 'bg-shift-long';
+            const hr = parseInt(timeStr.match(/(\d+)/)?.[0] || 0);
+            return (hr >= 1 && hr < 13) ? 'bg-shift-am' : 'bg-shift-pm';
+        }
+
+        async function loadData() {
+            document.getElementById('loader').style.opacity = '1';
+            const weekId = currentWeekStart.format('YYYY-MM-DD');
+            document.getElementById('weekIdDisplay').innerText = `WEEK ID: ${weekId}`;
             
-            // Trích xuất số giờ đầu tiên từ chuỗi (ví dụ "08:00 - 16:00" lấy 8)
-            const hourMatch = timeStr.match(/(\d+)/);
-            if (hourMatch) {
-                const hour = parseInt(hourMatch[0]);
-                if (hour >= 1 && hour < 13) return 'bg-shift-am'; // 1h sáng đến 12h59 trưa
-                if (hour >= 13 || hour === 0) return 'bg-shift-pm'; // 13h chiều đến đêm
-            }
-            return 'bg-shift-pm'; // Mặc định
-        }
-
-        async function loadMasterData() {
-            const snap = await getDoc(doc(db, "settings", "master_employees"));
-            masterEmployees = snap.exists() ? snap.data().list : [];
-        }
-
-        async function loadWeekData() {
-            document.getElementById('loader').classList.add('active');
-            await loadMasterData();
-            const weekId = currentWeekStart.format('YYYY-MM-DD');
-            document.getElementById('weekIdDisplay').innerText = `ID: WEEK-${weekId}`;
-            renderHeaders();
-            try {
-                const docSnap = await getDoc(doc(db, "schedules", weekId));
-                if (docSnap.exists()) {
-                    currentEmployees = docSnap.data().employees;
-                } else {
-                    currentEmployees = masterEmployees.map(emp => ({
-                        ...emp,
-                        schedule: Array(7).fill({ status: true, time: emp.shiftDefault })
-                    }));
-                }
-                renderTables();
-            } catch (e) { console.error(e); } 
-            finally { document.getElementById('loader').classList.remove('active'); }
-        }
-
-        async function saveCurrentData() {
-            if (!isAdmin) return;
-            const weekId = currentWeekStart.format('YYYY-MM-DD');
-            await setDoc(doc(db, "schedules", weekId), { employees: currentEmployees });
-            renderTables();
-        }
-
-        async function saveToMaster() {
-            const newList = currentEmployees.map(e => ({
-                id: e.id, name: e.name, dept: e.dept, shiftDefault: e.shiftDefault
+            const masterSnap = await getDoc(doc(db, "settings", "master_employees"));
+            masterEmployees = masterSnap.exists() ? masterSnap.data().list : [];
+            
+            const docSnap = await getDoc(doc(db, "schedules", weekId));
+            currentEmployees = docSnap.exists() ? docSnap.data().employees : masterEmployees.map(e => ({
+                ...e, schedule: Array(7).fill({ status: true, time: e.shiftDefault })
             }));
-            await setDoc(doc(db, "settings", "master_employees"), { list: newList });
+            
+            renderHeaders();
+            renderTables();
+            document.getElementById('timestamp').innerText = `Cập nhật: ${dayjs().format('HH:mm DD/MM/YYYY')}`;
+            document.getElementById('loader').style.opacity = '0';
+            setTimeout(() => document.getElementById('loader').classList.add('hidden'), 500);
         }
 
         function renderHeaders() {
             const start = currentWeekStart;
             document.getElementById('weekRange').innerText = `Tuần ${start.format('DD/MM')} - ${start.add(6, 'day').format('DD/MM')}`;
             ['headBEP', 'headPV'].forEach(id => {
-                const head = document.getElementById(id);
-                let html = `<tr class="bg-slate-50"><th class="p-5 text-left name-column text-[10px] font-black text-slate-400 uppercase tracking-widest w-[200px]">Nhân sự</th>`;
+                let html = `<tr class="border-b border-white/10"><th class="p-4 text-left name-column text-[9px] font-black text-slate-500 uppercase tracking-widest min-w-[150px]">Nhân viên</th>`;
                 for(let i=0; i<7; i++) {
                     const d = start.add(i, 'day');
-                    const holiday = holidaysVN[d.format('DD/MM')];
+                    const holiday = getVNHoliday(d);
                     const isWeekend = d.day() === 0 || d.day() === 6;
-                    html += `<th class="py-4 border-l border-slate-100 ${isWeekend ? 'bg-orange-50/30' : ''}">
+                    html += `<th class="py-4 min-w-[110px] border-l border-white/5 ${isWeekend ? 'bg-white/5' : ''} ${holiday ? 'bg-red-500/5' : ''}">
                         <div class="flex flex-col items-center">
-                            <span class="text-[10px] font-black uppercase ${isWeekend ? 'text-orange-600' : 'text-slate-400'}">${d.format('dddd')}</span>
-                            <span class="text-2xl font-black text-slate-800">${d.format('DD')}</span>
-                            ${holiday ? `<span class="mt-1 px-2 py-0.5 bg-red-500 text-white text-[7px] font-bold rounded-full">${holiday}</span>` : ''}
-                        </div>
-                    </th>`;
+                            <span class="text-[9px] font-black uppercase ${isWeekend ? 'text-orange-400' : 'text-slate-500'}">${d.format('dddd')}</span>
+                            <span class="text-2xl font-black text-white">${d.format('DD')}</span>
+                            ${holiday ? `<span class="mt-1 px-2 py-0.5 bg-red-600 text-[8px] text-white rounded-full font-bold animate-pulse">${holiday}</span>` : ''}
+                        </div></th>`;
                 }
-                html += `<th class="admin-only admin-cell p-2 bg-red-50 text-red-500 text-[10px] font-black">XÓA</th></tr>`;
-                head.innerHTML = html;
+                html += `<th class="admin-only admin-cell p-2 bg-red-500/10 text-red-400 text-[9px] font-black italic">XÓA</th></tr>`;
+                document.getElementById(id).innerHTML = html;
             });
         }
 
@@ -220,90 +268,125 @@
             const bBep = document.getElementById('bodyBEP');
             const bPv = document.getElementById('bodyPV');
             bBep.innerHTML = ""; bPv.innerHTML = "";
-            currentEmployees.forEach(emp => {
+            currentEmployees.sort((a,b) => a.name.localeCompare(b.name)).forEach(emp => {
                 const row = document.createElement('tr');
-                row.className = "border-b border-slate-50";
-                row.innerHTML = `
-                    <td class="p-4 name-column text-left">
-                        <div class="text-sm font-black text-slate-700">${emp.name}</div>
-                        <div class="text-[9px] font-bold text-slate-400 uppercase mt-1">🕒 Gốc: ${emp.shiftDefault}</div>
+                row.className = "border-b border-white/5 hover:bg-white/5 transition group";
+                row.innerHTML = `<td class="p-4 name-column text-left">
+                        <div class="text-sm font-black text-white group-hover:text-blue-400 transition">${emp.name}</div>
+                        <div class="text-[9px] font-bold text-slate-500 uppercase tracking-tight">🕒 Gốc: ${emp.shiftDefault}</div>
                     </td>
-                    ${emp.schedule.map((d, i) => {
-                        const colorClass = getShiftColorClass(d.time, d.status);
-                        return `<td class="p-1.5 border-l border-slate-50">
-                            <div data-action="toggle" data-uid="${emp.id}" data-day="${i}"
-                                 class="shift-cell mx-auto w-full min-w-[100px] h-[55px] rounded-[15px] flex flex-col items-center justify-center shadow-sm ${colorClass}">
-                                <span class="text-[14px] font-black tracking-tight">${d.time}</span>
-                                <span class="text-[8px] font-bold uppercase opacity-70">${d.status ? 'Làm việc' : 'Nghỉ'}</span>
-                            </div>
-                        </td>`
-                    }).join('')}
+                    ${emp.schedule.map((d, i) => `<td class="p-1.5 border-l border-white/5">
+                        <div data-action="toggle" data-uid="${emp.id}" data-day="${i}"
+                             class="mx-auto w-full min-w-[95px] h-[52px] rounded-[14px] flex flex-col items-center justify-center transition-all cursor-pointer active:scale-90 ${getShiftColorClass(d.time, d.status)}">
+                            <span class="text-[13px] font-black tracking-tight">${d.time}</span>
+                        </div></td>`).join('')}
                     <td class="admin-only admin-cell p-2">
-                        <button data-action="delete" data-uid="${emp.id}" class="text-slate-300 hover:text-red-500 font-bold">✕</button>
-                    </td>
-                `;
+                        <button data-action="delete" data-uid="${emp.id}" class="w-8 h-8 rounded-full bg-white/5 text-slate-500 hover:bg-red-500 hover:text-white transition">✕</button>
+                    </td>`;
                 if(emp.dept === 'BEP') bBep.appendChild(row); else bPv.appendChild(row);
             });
             document.body.classList.toggle('is-admin', isAdmin);
         }
 
-        document.getElementById('prevWeekBtn').onclick = () => { currentWeekStart = currentWeekStart.subtract(1, 'week'); loadWeekData(); };
-        document.getElementById('nextWeekBtn').onclick = () => { currentWeekStart = currentWeekStart.add(1, 'week'); loadWeekData(); };
-        document.getElementById('loginBtn').onclick = () => {
-            if (prompt("Mật khẩu Admin:") === "thaithae2025@") {
+        // CHỤP ẢNH CHẤT LƯỢNG CAO
+        document.getElementById('captureBtn').onclick = async () => {
+            const area = document.getElementById('capture-area');
+            const btn = document.getElementById('captureBtn');
+            
+            btn.innerHTML = "ĐANG XỬ LÝ...";
+            area.classList.add('capture-mode');
+            
+            await new Promise(r => setTimeout(r, 300));
+
+            const canvas = await html2canvas(area, { 
+                scale: 3, 
+                backgroundColor: null,
+                useCORS: true,
+                logging: false,
+                onclone: (doc) => {
+                    // Đảm bảo các thuộc tính sticky không làm lỗi ảnh
+                    const elements = doc.querySelectorAll('.name-column');
+                    elements.forEach(el => el.style.position = 'static');
+                }
+            });
+
+            area.classList.remove('capture-mode');
+            btn.innerHTML = "XUẤT ẢNH LỊCH";
+            
+            canvas.toBlob(blob => {
+                try {
+                    navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+                    alert("✨ Đã copy ảnh chất lượng cao vào bộ nhớ tạm!");
+                } catch {
+                    const link = document.createElement('a');
+                    link.download = `LichVuyp_${currentWeekStart.format('DD_MM')}.png`;
+                    link.href = canvas.toDataURL();
+                    link.click();
+                }
+            });
+        };
+
+        // UI Events
+        document.getElementById('prevWeekBtn').onclick = () => { currentWeekStart = currentWeekStart.subtract(1, 'week'); loadData(); };
+        document.getElementById('nextWeekBtn').onclick = () => { currentWeekStart = currentWeekStart.add(1, 'week'); loadData(); };
+        document.getElementById('loginBtn').onclick = () => openModal('loginModal');
+        document.getElementById('confirmLoginBtn').onclick = () => {
+            if (document.getElementById('adminPassInput').value === "thaithae2025@") {
                 isAdmin = true;
-                document.getElementById('statusLabel').innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> QUẢN TRỊ VIÊN`;
+                document.getElementById('statusLabel').innerHTML = `<span class="text-red-400">● CHẾ ĐỘ ADMIN</span>`;
                 document.getElementById('loginBtn').style.display = 'none';
+                closeModal('loginModal');
                 renderTables();
-            }
+            } else alert("Mật khẩu không chính xác!");
         };
 
         document.getElementById('addEmpBtn').onclick = async () => {
             const name = document.getElementById('newEmpName').value;
-            const dept = document.getElementById('newEmpDept').value;
-            const shift = document.getElementById('newEmpShift').value || "9h-17h";
-            if (!name) return;
-            const newPerson = { id: Date.now(), name, dept, shiftDefault: shift, schedule: Array(7).fill({ status: true, time: shift }) };
-            currentEmployees.push(newPerson);
-            await saveCurrentData();
-            await saveToMaster();
-            document.getElementById('newEmpName').value = "";
+            if (!name) return alert("Vui lòng nhập tên!");
+            const newEmp = { 
+                id: Date.now(), 
+                name, 
+                dept: document.getElementById('newEmpDept').value, 
+                shiftDefault: document.getElementById('newEmpShift').value || "17h-23h", 
+                schedule: Array(7).fill({ status: true, time: document.getElementById('newEmpShift').value || "17h-23h" }) 
+            };
+            currentEmployees.push(newEmp);
+            await save();
         };
 
-        document.getElementById('captureBtn').onclick = async () => {
-            const canvas = await html2canvas(document.getElementById('capture-area'), { scale: 2 });
-            canvas.toBlob(blob => {
-                navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-                alert("✨");
-            });
-        };
-
-        const handleAction = async (e) => {
+        document.addEventListener('click', async (e) => {
             if(!isAdmin) return;
             const btn = e.target.closest('[data-action]');
             if(!btn) return;
             const { action, uid, day } = btn.dataset;
             const emp = currentEmployees.find(ex => ex.id == uid);
-            if(action === 'delete' && confirm("Xóa nhân sự này?")) {
-                currentEmployees = currentEmployees.filter(ex => ex.id != uid);
-                await saveCurrentData(); await saveToMaster();
-            } else if (action === 'toggle') {
-                const dIdx = parseInt(day);
-                if(emp.schedule[dIdx].status) {
-                    emp.schedule[dIdx] = { status: false, time: 'OFF' };
-                } else {
-                    const t = prompt("Nhập giờ làm (Vd: 7h-15h):", emp.shiftDefault);
-                    if(t) emp.schedule[dIdx] = { status: true, time: t };
+            
+            if(action === 'delete') {
+                if(confirm(`Xóa ${emp.name}?`)) {
+                    currentEmployees = currentEmployees.filter(ex => ex.id != uid);
+                    await save();
                 }
-                await saveCurrentData();
+            } else if (action === 'toggle') {
+                openModal('shiftModal');
+                document.getElementById('shiftModalName').innerText = `${emp.name} - Ngày ${currentWeekStart.add(day, 'day').format('DD/MM')}`;
+                document.getElementById('customShiftInput').value = emp.schedule[day].time === 'OFF' ? emp.shiftDefault : emp.schedule[day].time;
+                
+                document.getElementById('btnSetOff').onclick = async () => { emp.schedule[day] = { status: false, time: 'OFF' }; await save(); closeModal('shiftModal'); };
+                document.getElementById('btnSetFull').onclick = async () => { emp.schedule[day] = { status: true, time: emp.shiftDefault }; await save(); closeModal('shiftModal'); };
+                document.getElementById('saveShiftBtn').onclick = async () => { 
+                    emp.schedule[day] = { status: true, time: document.getElementById('customShiftInput').value }; 
+                    await save(); 
+                    closeModal('shiftModal'); 
+                };
             }
-        };
-
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('#bodyBEP') || e.target.closest('#bodyPV')) handleAction(e);
         });
 
-        loadWeekData();
+        async function save() { 
+            await setDoc(doc(db, "schedules", currentWeekStart.format('YYYY-MM-DD')), { employees: currentEmployees }); 
+            renderTables(); 
+        }
+
+        loadData();
     </script>
 </body>
 </html>
