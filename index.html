@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <style>
         :root {
             --bg-main: #f8fafc;
@@ -168,7 +169,7 @@
         /* KHU VỰC CÀI ĐẶT (CHỈ HIỆN KHI CHỈNH SỬA) */
         .controls-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 12px;
             margin-bottom: 20px;
             background: #f8fafc;
@@ -194,6 +195,32 @@
         }
         
         .control-box input:focus { border-color: #2563eb; }
+
+        .color-settings { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+        .color-settings-title { font-size: 12px; font-weight: 800; color: #334155; }
+        .shift-color-list { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+        .shift-color-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            min-width: max-content;
+            padding: 4px 6px;
+            background: #fff;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #334155;
+        }
+        .shift-color-item input[type="color"] {
+            flex: none;
+            width: 25px;
+            height: 22px;
+            padding: 1px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+        }
 
         .btn-add {
             padding: 8px 14px;
@@ -305,12 +332,12 @@
         }
 
         /* 3 MÀU 3 KHUNG GIỜ + OFF PASTEL */
-        .shift-off { background-color: var(--off-bg); color: var(--off-text); border-color: var(--off-border); }
+        .shift-off { background-color: var(--shift-bg, var(--off-bg)); color: var(--off-text); border-color: var(--shift-border, var(--off-border)); }
         .shift-off .time-text { font-size: 13px; font-weight: 800; }
         
-        .shift-ca1 { background-color: var(--ca1-bg); color: var(--ca1-text); border-color: var(--ca1-border); }
-        .shift-ca2 { background-color: var(--ca2-bg); color: var(--ca2-text); border-color: var(--ca2-border); }
-        .shift-ca3 { background-color: var(--ca3-bg); color: var(--ca3-text); border-color: var(--ca3-border); }
+        .shift-ca1 { background-color: var(--shift-bg, var(--ca1-bg)); color: var(--ca1-text); border-color: var(--shift-border, var(--ca1-border)); }
+        .shift-ca2 { background-color: var(--shift-bg, var(--ca2-bg)); color: var(--ca2-text); border-color: var(--shift-border, var(--ca2-border)); }
+        .shift-ca3 { background-color: var(--shift-bg, var(--ca3-bg)); color: var(--ca3-text); border-color: var(--shift-border, var(--ca3-border)); }
 
         /* ĐỊNH DẠNG Ở CHẾ ĐỘ CHỈNH SỬA */
         .edit-select {
@@ -328,17 +355,29 @@
 
         .edit-note-input {
             width: 85%;
-            border: 1px dashed rgba(0,0,0,0.2);
+            border: 1px dashed rgba(0,0,0,0.25);
             border-radius: 4px;
             font-size: 11px;
             text-align: center;
             font-weight: 700;
-            color: inherit;
+            color: var(--shift-contrast, inherit);
             background: rgba(255, 255, 255, 0.5);
             outline: none;
-            padding: 1px 0;
+            padding: 2px 4px;
+            transition: border-color 0.15s ease, background-color 0.15s ease;
         }
-        .edit-note-input:focus { background: #fff; border-color: #2563eb; }
+        .edit-note-input.note-has-content {
+            border: 2px solid #dc2626;
+            background: rgba(255, 255, 255, 0.82);
+        }
+        .edit-note-input:focus { border-color: #2563eb; background: #fff; }
+
+        .note-tag {
+            color: var(--shift-contrast, inherit);
+            background: rgba(255, 255, 255, 0.62);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            padding: 2px 6px;
+        }
 
         /* Ẩn bớt công cụ ở Chế độ Xem */
         .is-view-mode .controls-grid { display: none !important; }
@@ -359,6 +398,15 @@
             outline: 3px solid rgba(37, 99, 235, 0.35);
             outline-offset: 2px;
         }
+
+        body, .container, .container * {
+            color: #000000;
+        }
+
+        .container input::placeholder {
+            color: #000000;
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -375,6 +423,10 @@
         <div class="nav-actions">
             <button class="mode-btn" id="toggleModeBtn" onclick="toggleMode()">
                 ✏️ Chế độ: Chỉnh sửa
+            </button>
+
+            <button class="mode-btn" type="button" onclick="exportScheduleToPNG()">
+                🖼️ Xuất PNG
             </button>
 
             <div class="week-selector">
@@ -402,6 +454,10 @@
         <div class="control-box">
             <select id="deleteEmpSelect"><option value="">-- Chọn NV cần xóa --</option></select>
             <button class="btn-add" style="background:#dc2626" onclick="deleteEmployee()">Xóa NV</button>
+        </div>
+        <div class="color-settings">
+            <span class="color-settings-title">Màu ca làm</span>
+            <div class="shift-color-list" id="shiftColorList"></div>
         </div>
     </div>
 
@@ -458,9 +514,21 @@
             { id: 5, name: "Tân", dept: "PHỤC VỤ & THU NGÂN" },
             { id: 6, name: "Hương", dept: "PHỤC VỤ & THU NGÂN" }
         ],
-        schedules: {}
+        schedules: {},
+        shiftColors: {
+            "OFF": "#dd3f3f",
+            "09:00 - 14:00 / 17:00 - 23:00": "#aeeebe",
+            "09:00 - 13:00 / 17:00 - 23:00": "#aeeebe",
+            "09:00 - 23:00": "#b9dcf3",
+            "13h - 23h": "#e0cbb2",
+            "14h - 25h": "#e0cbb2",
+            "08:30 - 15:00": "#b9dcf3",
+            "17:30 - 23:00": "#e0cbb2",
+            "10h - 16h": "#b9dcf3"
+        }
     };
     let database = JSON.parse(localStorage.getItem('SCHEDULE_ELEGANT_DB')) || defaultDatabase;
+    database.shiftColors = database.shiftColors || {};
     let isFirebaseReady = false;
     let isRemoteUpdate = false;
 
@@ -490,6 +558,7 @@
             if (snapshot.exists && snapshot.data().database) {
                 isRemoteUpdate = true;
                 database = snapshot.data().database;
+                database.shiftColors = database.shiftColors || {};
                 localStorage.setItem('SCHEDULE_ELEGANT_DB', JSON.stringify(database));
                 renderAll();
                 isRemoteUpdate = false;
@@ -539,8 +608,33 @@
         const val = input.value.trim();
         if (val && !database.shifts.includes(val)) {
             database.shifts.push(val);
+            database.shiftColors[val] = getDefaultShiftColor(val);
             saveData(); renderAll(); input.value = '';
         }
+    }
+
+    function getDefaultShiftColor(time) {
+        const styleClass = getShiftStyleClass(time);
+        if (styleClass === 'shift-off') return '#dd3f3f';
+        if (styleClass === 'shift-ca1') return '#aeeebe';
+        if (styleClass === 'shift-ca2') return '#b9dcf3';
+        return '#e0cbb2';
+    }
+
+    function getContrastColor(hexColor) {
+        const hex = hexColor.replace('#', '');
+        if (hex.length !== 6) return '#0f172a';
+        const red = parseInt(hex.slice(0, 2), 16);
+        const green = parseInt(hex.slice(2, 4), 16);
+        const blue = parseInt(hex.slice(4, 6), 16);
+        const luminance = (red * 299 + green * 587 + blue * 114) / 1000;
+        return luminance > 155 ? '#0f172a' : '#ffffff';
+    }
+
+    function updateShiftColor(shift, color) {
+        database.shiftColors[shift] = color;
+        saveData();
+        renderAll();
     }
 
     function addEmployee() {
@@ -571,6 +665,48 @@
         database.schedules[weekKey][empId] = currentData;
         saveData();
         renderAll();
+    }
+
+    function handleEnter(event, action) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            action();
+        }
+    }
+
+    async function exportScheduleToPNG() {
+        if (typeof html2canvas !== 'function') {
+            alert('Chưa tải được công cụ xuất ảnh. Vui lòng thử lại sau.');
+            return;
+        }
+
+        const source = document.getElementById('appContainer');
+        const clone = source.cloneNode(true);
+        const sourceTable = source.querySelector('table');
+        const exportWidth = Math.max(source.offsetWidth, sourceTable ? sourceTable.scrollWidth : 0);
+        clone.style.width = `${exportWidth}px`;
+        clone.style.maxWidth = 'none';
+        clone.style.position = 'absolute';
+        clone.style.left = '-100000px';
+        clone.style.top = '0';
+        clone.style.boxShadow = 'none';
+        clone.querySelector('.table-wrapper').style.overflow = 'visible';
+        document.body.appendChild(clone);
+
+        try {
+            const canvas = await html2canvas(clone, {
+                backgroundColor: '#f8fafc',
+                scale: 2,
+                useCORS: true,
+                logging: false
+            });
+            const link = document.createElement('a');
+            link.download = `lich-lam-viec-${getWeekKey(getStartOfWeek(currentWeekOffset))}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        } finally {
+            clone.remove();
+        }
     }
 
     // sa
@@ -643,6 +779,10 @@
                     const time = shiftObj.time || "OFF";
                     const note = shiftObj.note || "";
                     const styleClass = getShiftStyleClass(time);
+                    const shiftColor = database.shiftColors[time] || getDefaultShiftColor(time);
+                    const contrastColor = getContrastColor(shiftColor);
+                    const shiftStyle = ` style="--shift-bg: ${shiftColor}; --shift-border: ${shiftColor}; --shift-contrast: ${contrastColor};"`;
+                    const noteClass = note.trim() ? ' note-has-content' : '';
 
                     if (isEditMode) {
                         // CHẾ ĐỘ CHỈNH SỬA
@@ -653,11 +793,11 @@
 
                         trHtml += `
                             <td class="shift-cell">
-                                <div class="shift-badge ${styleClass}">
+                                <div class="shift-badge ${styleClass}"${shiftStyle}>
                                     <select class="edit-select" onchange="updateShift(${emp.id}, ${dayIdx}, 'time', this.value)">
                                         ${options}
                                     </select>
-                                    <input type="text" class="edit-note-input" value="${note}" placeholder="[Ghi chú]" onblur="updateShift(${emp.id}, ${dayIdx}, 'note', this.value)">
+                                    <input type="text" class="edit-note-input${noteClass}" value="${note}" placeholder="[Ghi chú]" onkeydown="handleEnter(event, () => updateShift(${emp.id}, ${dayIdx}, 'note', this.value))" onblur="updateShift(${emp.id}, ${dayIdx}, 'note', this.value)">
                                 </div>
                             </td>`;
                     } else {
@@ -667,7 +807,7 @@
 
                         trHtml += `
                             <td class="shift-cell">
-                                <div class="shift-badge ${styleClass}">
+                                <div class="shift-badge ${styleClass}"${shiftStyle}>
                                     <div class="time-text">${formattedTime}</div>
                                     ${noteHtml}
                                 </div>
@@ -678,9 +818,20 @@
                 tbody.innerHTML += trHtml;
             });
         });
+
+        const colorList = document.getElementById('shiftColorList');
+        colorList.innerHTML = database.shifts.map(shift => {
+            const color = database.shiftColors[shift] || getDefaultShiftColor(shift);
+            return `<label class="shift-color-item" title="Đổi màu ${shift}">
+                <span>${shift}</span>
+                <input type="color" value="${color}" aria-label="Màu ${shift}" onchange="updateShiftColor('${shift.replace(/'/g, "\\'")}', this.value)">
+            </label>`;
+        }).join('');
     }
 
     window.onload = () => {
+        document.getElementById('shiftInput').addEventListener('keydown', event => handleEnter(event, addShift));
+        document.getElementById('empName').addEventListener('keydown', event => handleEnter(event, addEmployee));
         renderAll();
         loadFirebaseData();
     };
